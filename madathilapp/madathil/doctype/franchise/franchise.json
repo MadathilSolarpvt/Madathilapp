@@ -1,0 +1,261 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:{franchise_name}-{panchayath}-{##}",
+ "creation": "2026-04-27 11:35:29.352016",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "franchise_name",
+  "phone_number",
+  "email",
+  "aadhaar_number",
+  "pan_number",
+  "office_address",
+  "i_agree_to_the_terms_and_conditions",
+  "column_break_yzqfv",
+  "franchise_owner",
+  "owner_name",
+  "franchise_application",
+  "aadhaar_card",
+  "pan_card",
+  "admin_remarks",
+  "bank_details_section",
+  "bank_name",
+  "bank_account_number",
+  "bank_account_details",
+  "column_break_bjdfx",
+  "ifsc",
+  "branch",
+  "location_details_section",
+  "zone",
+  "region",
+  "area",
+  "panchayath",
+  "column_break_ljydd",
+  "zonal_manager",
+  "regional_manager",
+  "area_manager",
+  "payment_details_section",
+  "investment_amount",
+  "column_break_pk9w3",
+  "payment_date"
+ ],
+ "fields": [
+  {
+   "fieldname": "franchise_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "phone_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Phone Number"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email"
+  },
+  {
+   "fieldname": "aadhaar_number",
+   "fieldtype": "Data",
+   "label": "Aadhaar Number"
+  },
+  {
+   "fieldname": "pan_number",
+   "fieldtype": "Data",
+   "label": "Pan Number"
+  },
+  {
+   "fieldname": "office_address",
+   "fieldtype": "Small Text",
+   "label": "Office Address"
+  },
+  {
+   "default": "0",
+   "fieldname": "i_agree_to_the_terms_and_conditions",
+   "fieldtype": "Check",
+   "label": "I agree to the Terms and Conditions",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_yzqfv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "franchise_owner",
+   "fieldtype": "Link",
+   "label": "Franchise Owner",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "franchise_owner.first_name",
+   "fieldname": "owner_name",
+   "fieldtype": "Data",
+   "label": "Owner Name"
+  },
+  {
+   "fieldname": "franchise_application",
+   "fieldtype": "Link",
+   "label": "Franchise Application",
+   "options": "Franchise Application"
+  },
+  {
+   "fieldname": "aadhaar_card",
+   "fieldtype": "Attach",
+   "label": "Aadhaar Card"
+  },
+  {
+   "fieldname": "pan_card",
+   "fieldtype": "Attach",
+   "label": "Pan Card"
+  },
+  {
+   "fieldname": "admin_remarks",
+   "fieldtype": "Small Text",
+   "label": "Admin Remarks"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "bank_details_section",
+   "fieldtype": "Section Break",
+   "label": "Bank Details"
+  },
+  {
+   "fieldname": "bank_name",
+   "fieldtype": "Data",
+   "label": "Bank Name"
+  },
+  {
+   "fieldname": "bank_account_number",
+   "fieldtype": "Data",
+   "label": "Bank Account Number"
+  },
+  {
+   "fieldname": "bank_account_details",
+   "fieldtype": "Attach",
+   "label": "Bank Account Details"
+  },
+  {
+   "fieldname": "column_break_bjdfx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ifsc",
+   "fieldtype": "Data",
+   "label": "IFSC"
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Data",
+   "label": "Branch"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "location_details_section",
+   "fieldtype": "Section Break",
+   "label": "Location Details"
+  },
+  {
+   "fieldname": "zone",
+   "fieldtype": "Link",
+   "label": "Zone",
+   "options": "Zone"
+  },
+  {
+   "fieldname": "region",
+   "fieldtype": "Link",
+   "label": "Region",
+   "options": "Region"
+  },
+  {
+   "fieldname": "area",
+   "fieldtype": "Link",
+   "label": "Area",
+   "options": "Area"
+  },
+  {
+   "fieldname": "panchayath",
+   "fieldtype": "Link",
+   "label": "Panchayath",
+   "options": "Panchayat"
+  },
+  {
+   "fieldname": "column_break_ljydd",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "zonal_manager",
+   "fieldtype": "Link",
+   "label": "Zonal Manager",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "regional_manager",
+   "fieldtype": "Link",
+   "label": "Regional Manager",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "area_manager",
+   "fieldtype": "Link",
+   "label": "Area Manager",
+   "options": "Employee"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "payment_details_section",
+   "fieldtype": "Section Break",
+   "label": "Payment Details"
+  },
+  {
+   "fieldname": "investment_amount",
+   "fieldtype": "Currency",
+   "label": "Investment Amount"
+  },
+  {
+   "fieldname": "column_break_pk9w3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "payment_date",
+   "fieldtype": "Date",
+   "label": "Payment Date"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-04-27 11:35:29.352016",
+ "modified_by": "Administrator",
+ "module": "Madathil",
+ "name": "Franchise",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

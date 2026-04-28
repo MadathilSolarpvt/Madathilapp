@@ -1,0 +1,135 @@
+{
+ "actions": [],
+ "creation": "2026-04-27 17:05:41.965176",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "project_settings_section",
+  "project_naming_series",
+  "automate_project_assignment",
+  "installer_payment_item",
+  "travel_allowance_item",
+  "other_expenses_item",
+  "column_break_3",
+  "send_customer_notifications",
+  "project_users_section",
+  "project_users",
+  "project_template_details_section",
+  "quotation_letter_head",
+  "template_details"
+ ],
+ "fields": [
+  {
+   "fieldname": "project_settings_section",
+   "fieldtype": "Section Break",
+   "label": "Project Settings"
+  },
+  {
+   "fieldname": "project_naming_series",
+   "fieldtype": "Select",
+   "label": "Project Naming Series",
+   "options": "PRO-SE-.YYYY.-"
+  },
+  {
+   "default": "0",
+   "fieldname": "automate_project_assignment",
+   "fieldtype": "Check",
+   "label": "Automate Project Assignment"
+  },
+  {
+   "fetch_from": "Item",
+   "fieldname": "installer_payment_item",
+   "fieldtype": "Link",
+   "label": "Installer payment item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "travel_allowance_item",
+   "fieldtype": "Link",
+   "label": "Travel Allowance Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "other_expenses_item",
+   "fieldtype": "Link",
+   "label": "Other Expenses Item",
+   "options": "Item"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "send_customer_notifications",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Send Customer Notifications"
+  },
+  {
+   "fieldname": "project_users_section",
+   "fieldtype": "Section Break",
+   "label": "Project Users"
+  },
+  {
+   "fieldname": "project_users",
+   "fieldtype": "Table",
+   "label": "Project Users",
+   "options": "Project User"
+  },
+  {
+   "fieldname": "project_template_details_section",
+   "fieldtype": "Section Break",
+   "label": "Project Template Details"
+  },
+  {
+   "fieldname": "quotation_letter_head",
+   "fieldtype": "Link",
+   "label": "Quotation Letter Head ",
+   "options": "Letter Head"
+  },
+  {
+   "fieldname": "template_details",
+   "fieldtype": "Table",
+   "label": "Template Details",
+   "options": "Template Details"
+  }
+ ],
+ "grid_page_length": 50,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-04-27 17:05:41.965176",
+ "modified_by": "Administrator",
+ "module": "Madathil",
+ "name": "Project Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Sales User",
+   "share": 1
+  }
+ ],
+ "quick_entry": 1,
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

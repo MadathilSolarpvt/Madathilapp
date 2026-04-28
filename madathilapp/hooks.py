@@ -230,6 +230,13 @@ doctype_js = {
 # 	}
 # ]
 
+
+fixtures = [
+    {
+        "dt": "Custom Field"
+    }
+]
+
 # Authentication and authorization
 # --------------------------------
 

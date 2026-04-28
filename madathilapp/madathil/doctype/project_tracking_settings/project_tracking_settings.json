@@ -1,0 +1,162 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-04-27 16:09:42.291112",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "address",
+  "color_theme",
+  "color_theme_2",
+  "c_column",
+  "phone",
+  "data_3",
+  "font",
+  "email",
+  "enabled",
+  "column_break_4",
+  "custom_menu",
+  "contact_information_section",
+  "contact_phone",
+  "wd_start",
+  "working_hour_start_time",
+  "terms",
+  "column_break_16",
+  "contact_email",
+  "wd_end",
+  "working_hour_end_time"
+ ],
+ "fields": [
+  {
+   "fieldname": "address",
+   "fieldtype": "Small Text",
+   "label": "Address"
+  },
+  {
+   "fieldname": "color_theme",
+   "fieldtype": "Color",
+   "label": " Dark Color Theme"
+  },
+  {
+   "fieldname": "color_theme_2",
+   "fieldtype": "Color",
+   "label": "Light Color Theme"
+  },
+  {
+   "fieldname": "c_column",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Phone"
+  },
+  {
+   "fieldname": "data_3",
+   "fieldtype": "Attach Image",
+   "label": "Logo"
+  },
+  {
+   "fieldname": "font",
+   "fieldtype": "Data",
+   "label": "Font"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email"
+  },
+  {
+   "default": "0",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Section Break",
+   "label": "Custom Menu Items"
+  },
+  {
+   "fieldname": "custom_menu",
+   "fieldtype": "Table",
+   "label": "Custom Menu",
+   "options": "Custom Menu Items"
+  },
+  {
+   "fieldname": "contact_information_section",
+   "fieldtype": "Section Break",
+   "label": "Contact Information"
+  },
+  {
+   "fieldname": "contact_phone",
+   "fieldtype": "Data",
+   "label": "Phone"
+  },
+  {
+   "fieldname": "wd_start",
+   "fieldtype": "Select",
+   "label": "Working Days-Start",
+   "options": "Monday\nTuesday\nWednesday\nThursday\nFriday\nSaturday\nSunday"
+  },
+  {
+   "fieldname": "working_hour_start_time",
+   "fieldtype": "Time",
+   "label": "Working Hour start time"
+  },
+  {
+   "fieldname": "terms",
+   "fieldtype": "Link",
+   "label": "Terms and Conditions",
+   "options": "Terms and Conditions"
+  },
+  {
+   "fieldname": "column_break_16",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "contact_email",
+   "fieldtype": "Data",
+   "label": "Email"
+  },
+  {
+   "fieldname": "wd_end",
+   "fieldtype": "Select",
+   "label": "Working Days-End",
+   "options": "Monday\nTuesday\nWednesday\nThursday\nFriday\nSaturday\nSunday"
+  },
+  {
+   "fieldname": "working_hour_end_time",
+   "fieldtype": "Time",
+   "label": "Working Hour end time"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-04-27 16:09:42.291112",
+ "modified_by": "Administrator",
+ "module": "Madathil",
+ "name": "Project Tracking Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

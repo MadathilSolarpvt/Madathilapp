@@ -1,0 +1,66 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:board_detls",
+ "creation": "2026-04-27 12:57:20.286516",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "board_detls",
+  "state",
+  "column_break_3",
+  "name_of_unique_id_for_customer"
+ ],
+ "fields": [
+  {
+   "fieldname": "board_detls",
+   "fieldtype": "Data",
+   "label": "Board Name",
+   "unique": 1
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Link",
+   "label": "State",
+   "options": "Territory"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "name_of_unique_id_for_customer",
+   "fieldtype": "Data",
+   "label": "Name of Unique ID for Customer"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-04-27 12:57:20.286516",
+ "modified_by": "Administrator",
+ "module": "Madathil",
+ "name": "Electricity Board",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

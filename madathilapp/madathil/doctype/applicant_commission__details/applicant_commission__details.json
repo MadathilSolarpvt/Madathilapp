@@ -1,0 +1,148 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-05-12 14:45:45.681544",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "holder_empid",
+  "holder_empname",
+  "holder_designation",
+  "user",
+  "user_name",
+  "reference_doctype",
+  "reference_link",
+  "column_break_ifhfu",
+  "amount",
+  "percentage",
+  "points",
+  "salary",
+  "incentives"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "holder_empid",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Employee ID",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "fetch_from": "holder_empid.employee_name",
+   "fieldname": "holder_empname",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Employee Name"
+  },
+  {
+   "fetch_from": "holder_empid.designation",
+   "fieldname": "holder_designation",
+   "fieldtype": "Link",
+   "label": "Designation",
+   "options": "Designation"
+  },
+  {
+   "columns": 1,
+   "fetch_from": "holder_empid.user_id",
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "label": "User",
+   "options": "User",
+   "width": "1"
+  },
+  {
+   "columns": 1,
+   "fetch_from": "user.full_name",
+   "fieldname": "user_name",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Name"
+  },
+  {
+   "fieldname": "reference_doctype",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Reference DocType",
+   "options": "\nEmployee\nCustomer"
+  },
+  {
+   "fieldname": "reference_link",
+   "fieldtype": "Dynamic Link",
+   "hidden": 1,
+   "label": "Reference Link",
+   "options": "reference_doctype"
+  },
+  {
+   "fieldname": "column_break_ifhfu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "columns": 2,
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount",
+   "permlevel": 1,
+   "read_only": 1,
+   "search_index": 1,
+   "width": "1"
+  },
+  {
+   "columns": 1,
+   "fieldname": "percentage",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "Percentage",
+   "permlevel": 1,
+   "search_index": 1,
+   "width": "1"
+  },
+  {
+   "columns": 1,
+   "fieldname": "points",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Points",
+   "permlevel": 1,
+   "search_index": 1,
+   "width": "1"
+  },
+  {
+   "columns": 1,
+   "fieldname": "salary",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Salary",
+   "width": "1"
+  },
+  {
+   "columns": 1,
+   "fieldname": "incentives",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Incentives",
+   "width": "1"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-05-12 16:51:15.351522",
+ "modified_by": "Administrator",
+ "module": "Madathil",
+ "name": "Applicant Commission  Details",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

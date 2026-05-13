@@ -44,7 +44,14 @@ app_license = "mit"
 
 # include js in doctype views
 doctype_js = {
-    "Employee": "public/js/employe.js"
+    # "Employee": "public/js/employe.js",
+    "Sales Order": "public/js/sales_order.js"
+}
+
+doc_events = {
+    "Sales Order": {
+          "validate": "madathilapp.doc_events.sales_order.calculate_commission"
+    }
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -229,8 +236,6 @@ doctype_js = {
 # 		"doctype": "{doctype_4}"
 # 	}
 # ]
-
-
 fixtures = [
     {
         "dt": "Custom Field"

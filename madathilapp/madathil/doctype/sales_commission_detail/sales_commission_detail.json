@@ -1,0 +1,61 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-05-07 18:01:47.414255",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "custom_sales_person",
+  "custom_employee",
+  "custom_role",
+  "custom_commission"
+ ],
+ "fields": [
+  {
+   "fieldname": "custom_sales_person",
+   "fieldtype": "Link",
+   "label": "Sales Person",
+   "options": "Sales Person"
+  },
+  {
+   "columns": 2,
+   "fieldname": "custom_employee",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "in_list_view": 1,
+   "label": "Employee",
+   "options": "Employee"
+  },
+  {
+   "columns": 2,
+   "fieldname": "custom_role",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Role",
+   "options": "Commission Role Master"
+  },
+  {
+   "columns": 2,
+   "fieldname": "custom_commission",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Commission"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-05-12 18:37:32.574284",
+ "modified_by": "Administrator",
+ "module": "Madathil",
+ "name": "Sales Commission Detail",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

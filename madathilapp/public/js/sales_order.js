@@ -38,7 +38,7 @@ frappe.ui.form.on('Applicant Commission Detail', {
             cdt,
             cdn,
             'points',
-            Math.round(points)
+            Math.round(points) 
         );
 
         // Clear incentives field

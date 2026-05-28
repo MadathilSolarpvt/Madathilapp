@@ -17,7 +17,6 @@ def calculate_commission(doc, method):
         )
 
         commission_amount = 0
-
         if role:
 
             # Fetch FIXED commission amount

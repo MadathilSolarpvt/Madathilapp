@@ -43,16 +43,10 @@ app_license = "mit"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-doctype_js = {
-    # "Employee": "public/js/employe.js",
-    "Sales Order": "public/js/sales_order.js"
-}
-
-doc_events = {
-    "Sales Order": {
-          "validate": "madathilapp.doc_events.sales_order.calculate_commission"
-    }
-}
+# doctype_js = {
+#     "Employee": "public/js/employe.js",
+#     "Salary Slip": "public/js/salary_slip.js"
+# }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -154,6 +148,26 @@ doc_events = {
 # 	}
 # }
 
+
+doctype_js = {
+    # "Employee": "public/js/employe.js",
+    "Sales Order": "public/js/sales_order.js"
+}
+
+doc_events = {
+    "Sales Order": {
+          "validate": "madathilapp.doc_events.sales_order.calculate_commission"
+    }
+}
+doc_events = {
+    "Sales Invoice": {
+        "before_save": "madathilapp.doc_events.sales_invoice.calculate_split_tax"
+    }
+}
+
+
+
+
 # Scheduled Tasks
 # ---------------
 
@@ -236,11 +250,6 @@ doc_events = {
 # 		"doctype": "{doctype_4}"
 # 	}
 # ]
-fixtures = [
-    {
-        "dt": "Custom Field"
-    }
-]
 
 # Authentication and authorization
 # --------------------------------

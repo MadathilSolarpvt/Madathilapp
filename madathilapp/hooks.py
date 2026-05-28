@@ -155,15 +155,22 @@ doctype_js = {
 }
 
 doc_events = {
+
     "Sales Order": {
-          "validate": "madathilapp.doc_events.sales_order.calculate_commission"
-    }
-}
-doc_events = {
+        "validate": "madathilapp.doc_events.sales_order.calculate_commission"
+    },
+
     "Sales Invoice": {
         "before_save": "madathilapp.doc_events.sales_invoice.calculate_split_tax"
     }
+
 }
+
+fixtures = [ { "dt": "Custom Field",
+
+
+
+ } ]
 
 
 

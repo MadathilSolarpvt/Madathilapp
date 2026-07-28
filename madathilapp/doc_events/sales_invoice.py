@@ -3,6 +3,13 @@ import frappe
 
 def calculate_split_tax(doc, method):
 
+    # -------------------------------------------------
+    # Run only for Madathil Marketing Company Pvt Ltd
+    # -------------------------------------------------
+
+    if doc.company != "Madathil Marketing Company Private Limited":
+        return
+
     if not doc.items:
         return
 
@@ -112,7 +119,7 @@ def calculate_split_tax(doc, method):
     })
 
     # =========================================
-    # CALCULATE TOTALS
+    # RECALCULATE TOTALS
     # =========================================
 
     doc.calculate_taxes_and_totals()

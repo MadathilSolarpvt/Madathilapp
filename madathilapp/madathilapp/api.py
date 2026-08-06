@@ -15,3 +15,23 @@ def get_quotation_manager():
     """, as_dict=True)
 
     return user[0] if user else {}
+
+
+@frappe.whitelist()
+def get_quotation_attachment(quotation):
+
+    files = frappe.get_all(
+        "File",
+        filters={
+            "attached_to_doctype": "Quotation",
+            "attached_to_name": quotation
+        },
+        fields=[
+            "name",
+            "file_name",
+            "file_url",
+            "is_private"
+        ]
+    )
+
+    return files

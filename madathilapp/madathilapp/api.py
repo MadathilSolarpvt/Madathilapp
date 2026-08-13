@@ -3,7 +3,8 @@ import frappe
 
 @frappe.whitelist()
 def get_quotation_manager():
-    user = frappe.db.sql("""
+
+    users = frappe.db.sql("""
         SELECT
             hr.parent,
             u.full_name
@@ -15,7 +16,7 @@ def get_quotation_manager():
         LIMIT 1
     """, as_dict=True)
 
-    return user[0] if user else {}
+    return users[0] if users else {}
 
 
 @frappe.whitelist()
@@ -42,21 +43,21 @@ def get_my_quotations():
 
     for quotation in quotations:
 
-        file = frappe.get_all(
+        files = frappe.get_all(
             "File",
             filters={
                 "attached_to_doctype": "Quotation",
                 "attached_to_name": quotation["name"]
             },
             fields=[
+                "name",
                 "file_name",
                 "file_url",
                 "is_private"
-            ],
-            limit=1
+            ]
         )
 
-        quotation["attachment"] = file[0] if file else {}
+        quotation["attachments"] = files
 
     return quotations
 
@@ -79,3 +80,67 @@ def get_quotation_attachment(quotation):
     )
 
     return files
+
+
+@frappe.whitelist()
+def get_my_sales_orders():
+
+    user = frappe.session.user
+
+    sales_orders = frappe.get_all(
+        "Sales Order",
+        filters={
+            "custom_sales_user": user
+        },
+        fields=[
+            "name",
+            "customer",
+            "transaction_date",
+            "delivery_date",
+            "status",
+            "grand_total",
+            "company"
+        ],
+        order_by="modified desc"
+    )
+
+    for order in sales_orders:
+
+        # Sales Order Items
+        order["items"] = frappe.get_all(
+            "Sales Order Item",
+            filters={
+                "parent": order["name"]
+            },
+            fields=[
+                "name",
+                "item_code",
+                "item_name",
+                "description",
+                "qty",
+                "uom",
+                "rate",
+                "amount",
+                "delivery_date"
+            ],
+            order_by="idx asc"
+        )
+
+        # Sales Order Attachments
+        files = frappe.get_all(
+            "File",
+            filters={
+                "attached_to_doctype": "Sales Order",
+                "attached_to_name": order["name"]
+            },
+            fields=[
+                "name",
+                "file_name",
+                "file_url",
+                "is_private"
+            ]
+        )
+
+        order["attachments"] = files
+
+    return sales_orders

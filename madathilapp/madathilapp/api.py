@@ -82,6 +82,7 @@ def get_quotation_attachment(quotation):
     return files
 
 
+
 @frappe.whitelist()
 def get_my_sales_orders():
 
@@ -99,21 +100,20 @@ def get_my_sales_orders():
             "delivery_date",
             "status",
             "grand_total",
-            "company"
+            "company",
+            "custom_sales_user"
         ],
         order_by="modified desc"
     )
 
     for order in sales_orders:
 
-        # Sales Order Items
         order["items"] = frappe.get_all(
             "Sales Order Item",
             filters={
                 "parent": order["name"]
             },
             fields=[
-                "name",
                 "item_code",
                 "item_name",
                 "description",
@@ -126,21 +126,20 @@ def get_my_sales_orders():
             order_by="idx asc"
         )
 
-        # Sales Order Attachments
-        files = frappe.get_all(
+        order["attachments"] = frappe.get_all(
             "File",
             filters={
                 "attached_to_doctype": "Sales Order",
                 "attached_to_name": order["name"]
             },
             fields=[
-                "name",
                 "file_name",
                 "file_url",
                 "is_private"
             ]
         )
 
-        order["attachments"] = files
-
-    return sales_orders
+    return {
+        "logged_in_user": user,
+        "sales_orders": sales_orders
+    }

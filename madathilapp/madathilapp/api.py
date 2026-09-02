@@ -3,8 +3,8 @@ import frappe
 
 @frappe.whitelist()
 def get_quotation_manager():
-
-    users = frappe.db.sql("""
+    users = frappe.db.sql(
+        """
         SELECT
             hr.parent,
             u.full_name
@@ -14,14 +14,15 @@ def get_quotation_manager():
         WHERE hr.role = 'Quotation Manager'
           AND u.enabled = 1
         LIMIT 1
-    """, as_dict=True)
+        """,
+        as_dict=True
+    )
 
     return users[0] if users else {}
 
 
 @frappe.whitelist()
 def get_my_quotations():
-
     user = frappe.session.user
 
     quotations = frappe.get_all(
@@ -42,7 +43,6 @@ def get_my_quotations():
     )
 
     for quotation in quotations:
-
         files = frappe.get_all(
             "File",
             filters={
@@ -64,7 +64,6 @@ def get_my_quotations():
 
 @frappe.whitelist()
 def get_quotation_attachment(quotation):
-
     files = frappe.get_all(
         "File",
         filters={
@@ -82,10 +81,8 @@ def get_quotation_attachment(quotation):
     return files
 
 
-
 @frappe.whitelist()
 def get_my_sales_orders():
-
     user = frappe.session.user
 
     sales_orders = frappe.get_all(
@@ -107,7 +104,6 @@ def get_my_sales_orders():
     )
 
     for order in sales_orders:
-
         order["items"] = frappe.get_all(
             "Sales Order Item",
             filters={
@@ -143,3 +139,27 @@ def get_my_sales_orders():
         "logged_in_user": user,
         "sales_orders": sales_orders
     }
+
+
+@frappe.whitelist()
+def get_my_employee():
+    user = frappe.session.user
+
+    employee = frappe.db.get_value(
+        "Employee",
+        {"user_id": user},
+        [
+            "name",
+            "employee_name",
+            "user_id",
+            "company"
+        ],
+        as_dict=True
+    )
+
+    if not employee:
+        frappe.throw(
+            f"No Employee is linked to the logged-in user: {user}"
+        )
+
+    return employee

@@ -15,7 +15,7 @@ def get_quotation_manager():
           AND u.enabled = 1
         LIMIT 1
         """,
-        as_dict=True
+        as_dict=True,
     )
 
     return users[0] if users else {}
@@ -37,9 +37,9 @@ def get_my_quotations():
             "valid_till",
             "status",
             "grand_total",
-            "company"
+            "company",
         ],
-        order_by="modified desc"
+        order_by="modified desc",
     )
 
     for quotation in quotations:
@@ -47,14 +47,14 @@ def get_my_quotations():
             "File",
             filters={
                 "attached_to_doctype": "Quotation",
-                "attached_to_name": quotation["name"]
+                "attached_to_name": quotation["name"],
             },
             fields=[
                 "name",
                 "file_name",
                 "file_url",
-                "is_private"
-            ]
+                "is_private",
+            ],
         )
 
         quotation["attachments"] = files
@@ -68,14 +68,14 @@ def get_quotation_attachment(quotation):
         "File",
         filters={
             "attached_to_doctype": "Quotation",
-            "attached_to_name": quotation
+            "attached_to_name": quotation,
         },
         fields=[
             "name",
             "file_name",
             "file_url",
-            "is_private"
-        ]
+            "is_private",
+        ],
     )
 
     return files
@@ -98,9 +98,9 @@ def get_my_sales_orders():
             "status",
             "grand_total",
             "company",
-            "custom_sales_user"
+            "custom_sales_user",
         ],
-        order_by="modified desc"
+        order_by="modified desc",
     )
 
     for order in sales_orders:
@@ -117,27 +117,27 @@ def get_my_sales_orders():
                 "uom",
                 "rate",
                 "amount",
-                "delivery_date"
+                "delivery_date",
             ],
-            order_by="idx asc"
+            order_by="idx asc",
         )
 
         order["attachments"] = frappe.get_all(
             "File",
             filters={
                 "attached_to_doctype": "Sales Order",
-                "attached_to_name": order["name"]
+                "attached_to_name": order["name"],
             },
             fields=[
                 "file_name",
                 "file_url",
-                "is_private"
-            ]
+                "is_private",
+            ],
         )
 
     return {
         "logged_in_user": user,
-        "sales_orders": sales_orders
+        "sales_orders": sales_orders,
     }
 
 
@@ -152,9 +152,9 @@ def get_my_employee():
             "name",
             "employee_name",
             "user_id",
-            "company"
+            "company",
         ],
-        as_dict=True
+        as_dict=True,
     )
 
     if not employee:
@@ -163,3 +163,47 @@ def get_my_employee():
         )
 
     return employee
+
+
+@frappe.whitelist()
+def get_my_payment_verifications():
+    user = frappe.session.user
+
+    employee = frappe.db.get_value(
+        "Employee",
+        {"user_id": user},
+        ["name", "employee_name"],
+        as_dict=True,
+    )
+
+    if not employee:
+        frappe.throw(
+            f"No Employee is linked to the logged-in user: {user}"
+        )
+
+    payments = frappe.get_all(
+        "Sales Payment Verification",
+        filters={
+            "sales_manager": employee["name"]
+        },
+        fields=[
+            "name",
+            "customer",
+            "customer_name",
+            "amount",
+            "total_project_cost",
+            "kw",
+            "place",
+            "utr_number",
+            "transaction_image",
+            "cheque_number",
+            "cheque_image",
+            "sales_manager",
+            "manager_name",
+            "workflow_state",
+        ],
+        order_by="modified desc",
+        ignore_permissions=True,
+    )
+
+    return payments

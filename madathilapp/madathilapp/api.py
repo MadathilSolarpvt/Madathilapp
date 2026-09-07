@@ -87,17 +87,37 @@ def get_my_sales_orders():
 
     sales_orders = frappe.get_all(
         "Sales Order",
-        filters={
-            "custom_sales_user": user,
-            "custom_sales_user__closing_executive": user,
-            "custom_sales_user__franchise": user,
-            "custom_am__sales_user": user,
-            "custom_rm__sales_user": user,
-            "custom_zm__sales_user": user,
-            "custom_agm__sales_user": user,
-            "custom_gm__sales_user": user,
-            "custom_vp__sales_user": user,
-        },
+
+        # ============================================================
+        # ALL USER RELATIONSHIPS ARE OR CONDITIONS
+        # ============================================================
+        filters={},
+
+        or_filters=[
+            # Main Sales User
+            {"custom_sales_user": user},
+
+            # Sales User -> Closing Executive
+            {"custom_sales_user__closing_executive": user},
+
+            # Sales User -> Franchise
+            {"custom_sales_user__franchise": user},
+
+            # Management hierarchy
+            {"custom_am__sales_user": user},
+            {"custom_rm__sales_user": user},
+            {"custom_zm__sales_user": user},
+            {"custom_agm__sales_user": user},
+            {"custom_gm__sales_user": user},
+            {"custom_vp__sales_user": user},
+
+            # Sales Order Executive
+            {"custom_executive_name": user},
+
+            # Sales Order Closing Executive
+            {"custom_closing_executive": user},
+        ],
+
         fields=[
             "name",
             "customer",
@@ -106,16 +126,26 @@ def get_my_sales_orders():
             "status",
             "grand_total",
             "company",
-            # "custom_sales_user",
+
+            # Sales User
+            "custom_sales_user",
+
+            # Sales Order fields
             "custom_executive_name",
             "custom_closing_executive",
+
+            # Franchise
             "custom_franchise_name",
         ],
+
         order_by="modified desc",
     )
 
     for order in sales_orders:
 
+        # ============================================================
+        # SALES ORDER ITEMS
+        # ============================================================
         order["items"] = frappe.get_all(
             "Sales Order Item",
             filters={
@@ -134,7 +164,9 @@ def get_my_sales_orders():
             order_by="idx asc",
         )
 
-        # Applicant Commission Details
+        # ============================================================
+        # APPLICANT COMMISSION DETAILS
+        # ============================================================
         order["commission_details"] = frappe.get_all(
             "Applicant Commission Detail",
             filters={
@@ -147,6 +179,9 @@ def get_my_sales_orders():
             order_by="idx asc",
         )
 
+        # ============================================================
+        # ATTACHMENTS
+        # ============================================================
         order["attachments"] = frappe.get_all(
             "File",
             filters={

@@ -89,6 +89,15 @@ def get_my_sales_orders():
         "Sales Order",
         filters={
             "custom_sales_user": user
+            "custom_sales_user__closing_executive": user
+            "custom_sales_user__franchise": user
+            "custom_am__sales_user" : user
+            "custom_rm__sales_user" : user
+            "custom_zm__sales_user" : user
+            "custom_agm__sales_user" : user
+            "custom_gm__sales_user" : user
+            "custom_vp__sales_user" : user
+
         },
         fields=[
             "name",
@@ -98,7 +107,10 @@ def get_my_sales_orders():
             "status",
             "grand_total",
             "company",
-            "custom_sales_user",
+            # "custom_sales_user",
+            "custom_executive_name",
+            "custom_closing_executive",
+            "custom_franchise_name",
         ],
         order_by="modified desc",
     )
@@ -122,6 +134,19 @@ def get_my_sales_orders():
             order_by="idx asc",
         )
 
+        # Applicant Commission Details
+        order["commission_details"] = frappe.get_all(
+            "Applicant Commission Detail",
+            filters={
+                "parent": order["name"]
+            },
+            fields=[
+                "points",
+                "user",
+            ],
+            order_by="idx asc",
+        )
+
         order["attachments"] = frappe.get_all(
             "File",
             filters={
@@ -139,6 +164,7 @@ def get_my_sales_orders():
         "logged_in_user": user,
         "sales_orders": sales_orders,
     }
+
 
 
 @frappe.whitelist()

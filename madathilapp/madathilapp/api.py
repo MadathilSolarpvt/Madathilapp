@@ -88,16 +88,15 @@ def get_my_sales_orders():
     sales_orders = frappe.get_all(
         "Sales Order",
         filters={
-            "custom_sales_user": user
-            "custom_sales_user__closing_executive": user
-            "custom_sales_user__franchise": user
-            "custom_am__sales_user" : user
-            "custom_rm__sales_user" : user
-            "custom_zm__sales_user" : user
-            "custom_agm__sales_user" : user
-            "custom_gm__sales_user" : user
-            "custom_vp__sales_user" : user
-
+            "custom_sales_user": user,
+            "custom_sales_user__closing_executive": user,
+            "custom_sales_user__franchise": user,
+            "custom_am__sales_user": user,
+            "custom_rm__sales_user": user,
+            "custom_zm__sales_user": user,
+            "custom_agm__sales_user": user,
+            "custom_gm__sales_user": user,
+            "custom_vp__sales_user": user,
         },
         fields=[
             "name",
@@ -116,6 +115,7 @@ def get_my_sales_orders():
     )
 
     for order in sales_orders:
+
         order["items"] = frappe.get_all(
             "Sales Order Item",
             filters={

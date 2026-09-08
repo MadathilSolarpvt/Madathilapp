@@ -263,3 +263,126 @@ def get_my_payment_verifications():
     )
 
     return payments
+
+@frappe.whitelist()
+def get_leave_application_access():
+    user = frappe.session.user
+
+    # ============================================================
+    # HR USERS
+    # ============================================================
+
+    hr_roles = {
+        "HR Manager",
+        "HR User",
+    }
+
+    user_roles = set(frappe.get_roles(user))
+
+    is_hr = bool(user_roles.intersection(hr_roles))
+
+    # ============================================================
+    # HR -> ALL EMPLOYEES
+    # ============================================================
+
+    if is_hr:
+        employees = frappe.get_all(
+            "Employee",
+            filters={
+                "status": "Active",
+            },
+            fields=[
+                "name",
+                "employee_name",
+                "user_id",
+                "company",
+            ],
+            order_by="employee_name asc",
+            ignore_permissions=True,
+        )
+
+        leave_applications = frappe.get_all(
+            "Leave Application",
+            fields=[
+                "name",
+                "employee",
+                "employee_name",
+                "leave_type",
+                "company",
+                "from_date",
+                "to_date",
+                "description",
+                # "leave_approver",
+                # "leave_approver_name",
+                "posting_date",
+                "status",
+                "half_day",
+                "total_leave_days",
+            ],
+            order_by="creation desc",
+            ignore_permissions=True,
+        )
+
+        return {
+            "is_hr": True,
+            "logged_in_user": user,
+            "employees": employees,
+            "leave_applications": leave_applications,
+        }
+
+    # ============================================================
+    # NORMAL EMPLOYEE
+    # ============================================================
+
+    employee = frappe.db.get_value(
+        "Employee",
+        {
+            "user_id": user,
+            "status": "Active",
+        },
+        [
+            "name",
+            "employee_name",
+            "user_id",
+            "company",
+        ],
+        as_dict=True,
+    )
+
+    if not employee:
+        frappe.throw(
+            f"No active Employee is linked to the logged-in user: {user}"
+        )
+
+    leave_applications = frappe.get_all(
+        "Leave Application",
+        filters={
+            "employee": employee["name"],
+        },
+        fields=[
+            "name",
+            "employee",
+            "employee_name",
+            "leave_type",
+            "company",
+            "from_date",
+            "to_date",
+            "description",
+            # "leave_approver",
+            # "leave_approver_name",
+            "posting_date",
+            "status",
+            "half_day",
+            "total_leave_days",
+        ],
+        order_by="creation desc",
+        ignore_permissions=True,
+    )
+
+    return {
+        "is_hr": False,
+        "logged_in_user": user,
+        "employee": employee,
+        "employees": [employee],
+        "leave_applications": leave_applications,
+    }    

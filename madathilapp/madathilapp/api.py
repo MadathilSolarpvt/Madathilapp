@@ -80,7 +80,6 @@ def get_quotation_attachment(quotation):
 
     return files
 
-
 @frappe.whitelist()
 def get_my_sales_orders():
     user = frappe.session.user
@@ -124,11 +123,21 @@ def get_my_sales_orders():
             "custom_executive_name",
             "custom_closing_executive",
             "custom_franchise_name",
+            "custom_franchise_commission",  # ADDED
         ],
         order_by="modified desc",
     )
 
     for order in sales_orders:
+
+        # ============================================================
+        # FRANCHISE COMMISSION
+        # ============================================================
+
+        if order.get("custom_franchise_name"):
+            order["custom_franchise_commission"] = (
+                order.get("custom_franchise_commission") or 0
+            )
 
         # ============================================================
         # SALES ORDER ITEMS

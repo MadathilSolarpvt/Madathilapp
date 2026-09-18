@@ -394,4 +394,24 @@ def get_leave_application_access():
         "employee": employee,
         "employees": [employee],
         "leave_applications": leave_applications,
-    }    
+    } 
+
+
+
+
+
+@frappe.whitelist()
+def get_franchise_applications():
+
+    records = frappe.get_all(
+        "Franchise Application Form",
+        filters={
+            "docstatus": ["in", [0, 1]]
+        },
+        fields=["name"],
+        order_by="name asc",
+        limit_page_length=0,
+        ignore_permissions=True
+    )
+
+    return [row.name for row in records]

@@ -415,3 +415,55 @@ def get_franchise_applications():
     )
 
     return [row.name for row in records]
+
+@frappe.whitelist()
+def get_solar_product_bundles():
+
+    bundles = frappe.get_all(
+        "Product Bundle",
+        filters={
+            "custom_group_name": "Solar Package"
+        },
+        fields=[
+            "name",
+            "new_item_code",
+            "description",
+            "custom_product_total_price",
+            "custom_group_name"
+        ],
+        order_by="name asc",
+        limit_page_length=0,
+        ignore_permissions=True
+    )
+
+    result = []
+
+    for bundle in bundles:
+
+        # Get complete Product Bundle document
+        doc = frappe.get_doc(
+            "Product Bundle",
+            bundle.name
+        )
+
+        items = []
+
+        for row in doc.items:
+
+            items.append({
+                "item": row.item_code,
+                "description": row.description,
+                "qty": row.qty,
+                "uom": row.uom
+            })
+
+        result.append({
+            "name": bundle.name,
+            "new_item_code": bundle.new_item_code,
+            "description": bundle.description,
+            "custom_product_total_price": bundle.custom_product_total_price,
+            "custom_group_name": bundle.custom_group_name,
+            "items": items
+        })
+
+    return result

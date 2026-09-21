@@ -415,8 +415,8 @@ def get_franchise_applications():
     )
 
     return [row.name for row in records]
-
-@frappe.whitelist()
+   
+@frappe.whitelist(allow_guest=True)
 def get_solar_product_bundles():
 
     bundles = frappe.get_all(

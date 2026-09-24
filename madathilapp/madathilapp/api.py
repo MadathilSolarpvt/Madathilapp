@@ -524,8 +524,30 @@ def get_solar_package_items():
 
 
 
-@frappe.whitelist()
+
+@frappe.whitelist(allow_guest=True)
 def calculate_custom_package_total(items=None, solar_package=None):
+
+    # ---------------------------------------------------------
+    # GET DATA FROM JSON REQUEST
+    # ---------------------------------------------------------
+
+    if items is None or solar_package is None:
+        try:
+            request_data = frappe.request.get_json(silent=True) or {}
+
+            if items is None:
+                items = request_data.get("items")
+
+            if solar_package is None:
+                solar_package = request_data.get("solar_package")
+
+        except Exception:
+            pass
+
+    # ---------------------------------------------------------
+    # PARSE ITEMS
+    # ---------------------------------------------------------
 
     if isinstance(items, str):
         try:
@@ -533,15 +555,19 @@ def calculate_custom_package_total(items=None, solar_package=None):
         except Exception:
             frappe.throw("Invalid items JSON.")
 
-    if not items:
+    if not isinstance(items, list) or not items:
         frappe.throw("Please select at least one item.")
+
+    # ---------------------------------------------------------
+    # SOLAR PACKAGE
+    # ---------------------------------------------------------
 
     if not solar_package:
         frappe.throw("Please select a Solar Package.")
 
-    # --------------------------------
+    # ---------------------------------------------------------
     # GET PAPER WORK FEES
-    # --------------------------------
+    # ---------------------------------------------------------
 
     paper_work_fees = frappe.db.get_value(
         "Solar Package",
@@ -549,18 +575,28 @@ def calculate_custom_package_total(items=None, solar_package=None):
         "paper_work_fees"
     )
 
+    if paper_work_fees is None:
+        frappe.throw(
+            f"Paper Work Fees not found for Solar Package: {solar_package}"
+        )
+
     paper_work_fees = float(paper_work_fees or 0)
 
-    # --------------------------------
-    # CALCULATE ITEMS
-    # --------------------------------
+    # ---------------------------------------------------------
+    # CALCULATE ITEMS TOTAL
+    # ---------------------------------------------------------
 
-    items_total = 0
+    items_total = 0.0
     missing_prices = []
 
     for row in items:
 
-        item_code = str(row.get("item_code") or "").strip()
+        if not isinstance(row, dict):
+            continue
+
+        item_code = str(
+            row.get("item_code") or ""
+        ).strip()
 
         try:
             qty = float(row.get("qty") or 0)
@@ -570,27 +606,33 @@ def calculate_custom_package_total(items=None, solar_package=None):
         if not item_code or qty <= 0:
             continue
 
-        price = frappe.db.get_value(
+        # Get latest Standard Selling price
+        price_rows = frappe.get_all(
             "Item Price",
-            {
+            filters={
                 "item_code": item_code,
                 "price_list": "Standard Selling",
                 "selling": 1
             },
-            "price_list_rate",
-            order_by="creation desc"
+            fields=["price_list_rate"],
+            order_by="creation desc",
+            limit=1
         )
 
-        if price is None:
+        if not price_rows:
             missing_prices.append(item_code)
             continue
 
-        # PRICE × QUANTITY
-        items_total += float(price) * qty
+        price_list_rate = float(
+            price_rows[0].price_list_rate or 0
+        )
 
-    # --------------------------------
-    # MISSING PRICE CHECK
-    # --------------------------------
+        # PRICE × QUANTITY
+        items_total += price_list_rate * qty
+
+    # ---------------------------------------------------------
+    # MISSING PRICE
+    # ---------------------------------------------------------
 
     if missing_prices:
         frappe.throw(
@@ -598,9 +640,9 @@ def calculate_custom_package_total(items=None, solar_package=None):
             + ", ".join(missing_prices)
         )
 
-    # --------------------------------
+    # ---------------------------------------------------------
     # FINAL TOTAL
-    # --------------------------------
+    # ---------------------------------------------------------
 
     grand_total = items_total + paper_work_fees
 

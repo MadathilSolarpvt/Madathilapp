@@ -1,4 +1,5 @@
 import frappe
+import json
 
 
 @frappe.whitelist()
@@ -468,8 +469,6 @@ def get_solar_product_bundles():
 
     return result
 
-import frappe
-
 
 @frappe.whitelist(allow_guest=True)
 def get_solar_package_items():
@@ -520,3 +519,135 @@ def get_solar_package_items():
         })
 
     return result
+
+
+
+
+
+@frappe.whitelist()
+def calculate_custom_package_total(items=None, solar_package=None):
+    """Calculate Custom Package total using ERPNext Item Price
+    and paperwork fees from Solar Package.
+
+    Flutter sends:
+    {
+        "solar_package": "Solar Package Name",
+        "items": [
+            {"item_code": "ITEM-001", "qty": 1},
+            {"item_code": "ITEM-002", "qty": 2}
+        ]
+    }
+    """
+
+    # Support form_dict arguments and JSON request body
+    if items is None or solar_package is None:
+        try:
+            request_data = frappe.request.get_json(silent=True) or {}
+
+            if items is None:
+                items = request_data.get("items")
+
+            if solar_package is None:
+                solar_package = request_data.get("solar_package")
+
+        except Exception:
+            pass
+
+    # Parse items if sent as JSON string
+    if isinstance(items, str):
+        try:
+            items = json.loads(items)
+        except Exception:
+            frappe.throw("Invalid items JSON.")
+
+    # Validate items
+    if not isinstance(items, list) or not items:
+        frappe.throw("Please select at least one item.")
+
+    # Validate Solar Package
+    if not solar_package:
+        frappe.throw("Please select a Solar Package.")
+
+    # ---------------------------------------------------------
+    # FETCH PAPER WORK FEES FROM SOLAR PACKAGE
+    # ---------------------------------------------------------
+
+    paper_work_fees = frappe.db.get_value(
+        "Solar Package",
+        solar_package,
+        "paper_work_fees"
+    )
+
+    if paper_work_fees is None:
+        frappe.throw(
+            f"Paper Work Fees not found for Solar Package: {solar_package}"
+        )
+
+    paper_work_fees = float(paper_work_fees or 0)
+
+    # ---------------------------------------------------------
+    # CALCULATE ITEM TOTAL
+    # ---------------------------------------------------------
+
+    items_total = 0.0
+    missing_prices = []
+
+    for row in items:
+
+        if not isinstance(row, dict):
+            continue
+
+        item_code = str(row.get("item_code") or "").strip()
+
+        try:
+            qty = float(row.get("qty") or 0)
+        except (TypeError, ValueError):
+            qty = 0
+
+        if not item_code or qty <= 0:
+            continue
+
+        # Get latest Standard Selling Item Price
+        price_rows = frappe.get_all(
+            "Item Price",
+            filters={
+                "item_code": item_code,
+                "price_list": "Standard Selling",
+                "selling": 1,
+            },
+            fields=["price_list_rate"],
+            order_by="creation desc",
+            limit=1,
+        )
+
+        if not price_rows:
+            missing_prices.append(item_code)
+            continue
+
+        rate = float(price_rows[0].price_list_rate or 0)
+
+        items_total += rate * qty
+
+    # ---------------------------------------------------------
+    # CHECK MISSING PRICES
+    # ---------------------------------------------------------
+
+    if missing_prices:
+        frappe.throw(
+            "No Standard Selling price found for: "
+            + ", ".join(missing_prices)
+        )
+
+    # ---------------------------------------------------------
+    # FINAL TOTAL
+    # ---------------------------------------------------------
+
+    grand_total = items_total + paper_work_fees
+
+    # Do not return individual item prices
+    return {
+        "paper_work": paper_work_fees,
+        "grand_total": grand_total,
+    }
+
+

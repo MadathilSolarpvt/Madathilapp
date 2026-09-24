@@ -526,20 +526,8 @@ def get_solar_package_items():
 
 @frappe.whitelist()
 def calculate_custom_package_total(items=None, solar_package=None):
-    """Calculate Custom Package total using ERPNext Item Price
-    and paperwork fees from Solar Package.
 
-    Flutter sends:
-    {
-        "solar_package": "Solar Package Name",
-        "items": [
-            {"item_code": "ITEM-001", "qty": 1},
-            {"item_code": "ITEM-002", "qty": 2}
-        ]
-    }
-    """
-
-    # Support form_dict arguments and JSON request body
+    # Support JSON request body
     if items is None or solar_package is None:
         try:
             request_data = frappe.request.get_json(silent=True) or {}
@@ -553,25 +541,19 @@ def calculate_custom_package_total(items=None, solar_package=None):
         except Exception:
             pass
 
-    # Parse items if sent as JSON string
     if isinstance(items, str):
         try:
             items = json.loads(items)
         except Exception:
             frappe.throw("Invalid items JSON.")
 
-    # Validate items
     if not isinstance(items, list) or not items:
         frappe.throw("Please select at least one item.")
 
-    # Validate Solar Package
     if not solar_package:
         frappe.throw("Please select a Solar Package.")
 
-    # ---------------------------------------------------------
-    # FETCH PAPER WORK FEES FROM SOLAR PACKAGE
-    # ---------------------------------------------------------
-
+    # Get Paper Work Fees from Solar Package
     paper_work_fees = frappe.db.get_value(
         "Solar Package",
         solar_package,
@@ -585,10 +567,6 @@ def calculate_custom_package_total(items=None, solar_package=None):
 
     paper_work_fees = float(paper_work_fees or 0)
 
-    # ---------------------------------------------------------
-    # CALCULATE ITEM TOTAL
-    # ---------------------------------------------------------
-
     items_total = 0.0
     missing_prices = []
 
@@ -597,7 +575,9 @@ def calculate_custom_package_total(items=None, solar_package=None):
         if not isinstance(row, dict):
             continue
 
-        item_code = str(row.get("item_code") or "").strip()
+        item_code = str(
+            row.get("item_code") or ""
+        ).strip()
 
         try:
             qty = float(row.get("qty") or 0)
@@ -607,7 +587,6 @@ def calculate_custom_package_total(items=None, solar_package=None):
         if not item_code or qty <= 0:
             continue
 
-        # Get latest Standard Selling Item Price
         price_rows = frappe.get_all(
             "Item Price",
             filters={
@@ -624,13 +603,11 @@ def calculate_custom_package_total(items=None, solar_package=None):
             missing_prices.append(item_code)
             continue
 
-        rate = float(price_rows[0].price_list_rate or 0)
+        rate = float(
+            price_rows[0].price_list_rate or 0
+        )
 
         items_total += rate * qty
-
-    # ---------------------------------------------------------
-    # CHECK MISSING PRICES
-    # ---------------------------------------------------------
 
     if missing_prices:
         frappe.throw(
@@ -638,13 +615,8 @@ def calculate_custom_package_total(items=None, solar_package=None):
             + ", ".join(missing_prices)
         )
 
-    # ---------------------------------------------------------
-    # FINAL TOTAL
-    # ---------------------------------------------------------
-
     grand_total = items_total + paper_work_fees
 
-    # Do not return individual item prices
     return {
         "paper_work": paper_work_fees,
         "grand_total": grand_total,

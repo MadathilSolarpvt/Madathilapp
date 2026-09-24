@@ -527,57 +527,40 @@ def get_solar_package_items():
 @frappe.whitelist()
 def calculate_custom_package_total(items=None, solar_package=None):
 
-    # Support JSON request body
-    if items is None or solar_package is None:
-        try:
-            request_data = frappe.request.get_json(silent=True) or {}
-
-            if items is None:
-                items = request_data.get("items")
-
-            if solar_package is None:
-                solar_package = request_data.get("solar_package")
-
-        except Exception:
-            pass
-
     if isinstance(items, str):
         try:
             items = json.loads(items)
         except Exception:
             frappe.throw("Invalid items JSON.")
 
-    if not isinstance(items, list) or not items:
+    if not items:
         frappe.throw("Please select at least one item.")
 
     if not solar_package:
         frappe.throw("Please select a Solar Package.")
 
-    # Get Paper Work Fees from Solar Package
+    # --------------------------------
+    # GET PAPER WORK FEES
+    # --------------------------------
+
     paper_work_fees = frappe.db.get_value(
         "Solar Package",
         solar_package,
         "paper_work_fees"
     )
 
-    if paper_work_fees is None:
-        frappe.throw(
-            f"Paper Work Fees not found for Solar Package: {solar_package}"
-        )
-
     paper_work_fees = float(paper_work_fees or 0)
 
-    items_total = 0.0
+    # --------------------------------
+    # CALCULATE ITEMS
+    # --------------------------------
+
+    items_total = 0
     missing_prices = []
 
     for row in items:
 
-        if not isinstance(row, dict):
-            continue
-
-        item_code = str(
-            row.get("item_code") or ""
-        ).strip()
+        item_code = str(row.get("item_code") or "").strip()
 
         try:
             qty = float(row.get("qty") or 0)
@@ -587,27 +570,27 @@ def calculate_custom_package_total(items=None, solar_package=None):
         if not item_code or qty <= 0:
             continue
 
-        price_rows = frappe.get_all(
+        price = frappe.db.get_value(
             "Item Price",
-            filters={
+            {
                 "item_code": item_code,
                 "price_list": "Standard Selling",
-                "selling": 1,
+                "selling": 1
             },
-            fields=["price_list_rate"],
-            order_by="creation desc",
-            limit=1,
+            "price_list_rate",
+            order_by="creation desc"
         )
 
-        if not price_rows:
+        if price is None:
             missing_prices.append(item_code)
             continue
 
-        rate = float(
-            price_rows[0].price_list_rate or 0
-        )
+        # PRICE × QUANTITY
+        items_total += float(price) * qty
 
-        items_total += rate * qty
+    # --------------------------------
+    # MISSING PRICE CHECK
+    # --------------------------------
 
     if missing_prices:
         frappe.throw(
@@ -615,11 +598,16 @@ def calculate_custom_package_total(items=None, solar_package=None):
             + ", ".join(missing_prices)
         )
 
+    # --------------------------------
+    # FINAL TOTAL
+    # --------------------------------
+
     grand_total = items_total + paper_work_fees
 
     return {
+        "items_total": items_total,
         "paper_work": paper_work_fees,
-        "grand_total": grand_total,
+        "grand_total": grand_total
     }
 
 

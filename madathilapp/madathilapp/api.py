@@ -467,3 +467,56 @@ def get_solar_product_bundles():
         })
 
     return result
+
+import frappe
+
+
+@frappe.whitelist(allow_guest=True)
+def get_solar_package_items():
+    """
+    Fetch Solar Package Items along with their Item Price.
+    """
+
+    items = frappe.get_all(
+        "Item",
+        filters={
+            "item_group": "Solar Package",
+            "disabled": 0
+        },
+        fields=[
+            "item_code",
+            "item_name",
+            "description",
+            "gst_hsn_code",
+            "stock_uom"
+        ]
+    )
+
+    result = []
+
+    for item in items:
+
+        prices = frappe.get_all(
+            "Item Price",
+            filters={
+                "item_code": item.item_code,
+                "custom_item_group": "Solar Package"
+            },
+            fields=[
+                "price_list",
+                "price_list_rate",
+                "currency"
+            ],
+            order_by="creation desc"
+        )
+
+        result.append({
+            "item_code": item.item_code,
+            "item_name": item.item_name,
+            "description": item.description,
+            "gst_hsn_code": item.gst_hsn_code,
+            "stock_uom": item.stock_uom,
+            "prices": prices
+        })
+
+    return result

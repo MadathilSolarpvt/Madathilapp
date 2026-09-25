@@ -524,30 +524,19 @@ def get_solar_package_items():
 
 
 
-
 @frappe.whitelist(allow_guest=True)
-def calculate_custom_package_total(items=None, solar_package=None):
+def calculate_custom_package_total(items=None):
 
-    # ---------------------------------------------------------
-    # GET DATA FROM JSON REQUEST
-    # ---------------------------------------------------------
+    # --------------------------------------------------
+    # GET ITEMS
+    # --------------------------------------------------
 
-    if items is None or solar_package is None:
+    if items is None:
         try:
             request_data = frappe.request.get_json(silent=True) or {}
-
-            if items is None:
-                items = request_data.get("items")
-
-            if solar_package is None:
-                solar_package = request_data.get("solar_package")
-
+            items = request_data.get("items")
         except Exception:
-            pass
-
-    # ---------------------------------------------------------
-    # PARSE ITEMS
-    # ---------------------------------------------------------
+            items = None
 
     if isinstance(items, str):
         try:
@@ -558,33 +547,37 @@ def calculate_custom_package_total(items=None, solar_package=None):
     if not isinstance(items, list) or not items:
         frappe.throw("Please select at least one item.")
 
-    # ---------------------------------------------------------
-    # SOLAR PACKAGE
-    # ---------------------------------------------------------
-
-    if not solar_package:
-        frappe.throw("Please select a Solar Package.")
-
-    # ---------------------------------------------------------
+    # --------------------------------------------------
     # GET PAPER WORK FEES
-    # ---------------------------------------------------------
+    # FROM SOLAR PACKAGE WHERE ITEM GROUP = SOLAR PACKAGE
+    # --------------------------------------------------
 
-    paper_work_fees = frappe.db.get_value(
+    package_rows = frappe.get_all(
         "Solar Package",
-        solar_package,
-        "paper_work_fees"
+        filters={
+            "item_group": "Solar Package"
+        },
+        fields=[
+            "name",
+            "paper_work_fees",
+            "item_group"
+        ],
+        order_by="modified desc",
+        limit=1
     )
 
-    if paper_work_fees is None:
+    if not package_rows:
         frappe.throw(
-            f"Paper Work Fees not found for Solar Package: {solar_package}"
+            "No Solar Package found with Item Group = Solar Package."
         )
 
-    paper_work_fees = float(paper_work_fees or 0)
+    paper_work_fees = float(
+        package_rows[0].paper_work_fees or 0
+    )
 
-    # ---------------------------------------------------------
-    # CALCULATE ITEMS TOTAL
-    # ---------------------------------------------------------
+    # --------------------------------------------------
+    # CALCULATE ITEM TOTAL
+    # --------------------------------------------------
 
     items_total = 0.0
     missing_prices = []
@@ -606,7 +599,7 @@ def calculate_custom_package_total(items=None, solar_package=None):
         if not item_code or qty <= 0:
             continue
 
-        # Get latest Standard Selling price
+        # Get Standard Selling price
         price_rows = frappe.get_all(
             "Item Price",
             filters={
@@ -630,9 +623,9 @@ def calculate_custom_package_total(items=None, solar_package=None):
         # PRICE × QUANTITY
         items_total += price_list_rate * qty
 
-    # ---------------------------------------------------------
-    # MISSING PRICE
-    # ---------------------------------------------------------
+    # --------------------------------------------------
+    # PRICE VALIDATION
+    # --------------------------------------------------
 
     if missing_prices:
         frappe.throw(
@@ -640,9 +633,9 @@ def calculate_custom_package_total(items=None, solar_package=None):
             + ", ".join(missing_prices)
         )
 
-    # ---------------------------------------------------------
-    # FINAL TOTAL
-    # ---------------------------------------------------------
+    # --------------------------------------------------
+    # GRAND TOTAL
+    # --------------------------------------------------
 
     grand_total = items_total + paper_work_fees
 

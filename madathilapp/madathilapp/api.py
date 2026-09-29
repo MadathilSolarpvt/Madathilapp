@@ -646,3 +646,100 @@ def calculate_custom_package_total(items=None):
     }
 
 
+@frappe.whitelist(allow_guest=True)
+def create_supplier(
+    supplier_name,
+    supplier_type,
+    gstin=None,
+    gst_category=None,
+    country="India",
+    mobile_no=None,
+    email_id=None
+):
+    try:
+        allowed_supplier_types = [
+            "Company",
+            "Individual",
+            "Partnership"
+        ]
+
+        if supplier_type not in allowed_supplier_types:
+            return {
+                "success": False,
+                "message": "Invalid Supplier Type"
+            }
+
+        # GSTIN is not mandatory for Individual
+        if supplier_type != "Individual" and gst_category == "Registered Regular":
+            if not gstin:
+                return {
+                    "success": False,
+                    "message": "GSTIN is required for Registered Regular suppliers"
+                }
+
+        # Check duplicate supplier
+        existing_supplier = frappe.db.exists(
+            "Supplier",
+            {
+                "supplier_name": supplier_name
+            }
+        )
+
+        if existing_supplier:
+            return {
+                "success": False,
+                "message": "Supplier already exists",
+                "supplier": existing_supplier
+            }
+
+        supplier = frappe.new_doc("Supplier")
+
+        # Default fields
+        supplier.supplier_name = supplier_name
+        supplier.supplier_group = "Dealer"
+        supplier.supplier_type = supplier_type
+        supplier.country = country
+
+        # Optional GST fields
+        if gstin:
+            supplier.tax_id = gstin
+
+        if gst_category:
+            supplier.gst_category = gst_category
+
+        # Contact fields
+        if mobile_no:
+            supplier.mobile_no = mobile_no
+
+        if email_id:
+            supplier.email_id = email_id
+
+        supplier.insert(ignore_permissions=True)
+
+        frappe.db.commit()
+
+        return {
+            "success": True,
+            "message": "Supplier created successfully",
+            "data": {
+                "supplier": supplier.name,
+                "supplier_name": supplier.supplier_name,
+                "supplier_group": supplier.supplier_group,
+                "supplier_type": supplier.supplier_type,
+                "gstin": supplier.tax_id,
+                "gst_category": supplier.gst_category
+            }
+        }
+
+    except Exception:
+        frappe.log_error(
+            frappe.get_traceback(),
+            "Mobile Supplier Creation Error"
+        )
+
+        return {
+            "success": False,
+            "message": "Failed to create supplier"
+        }    
+
+

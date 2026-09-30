@@ -647,9 +647,9 @@ def calculate_custom_package_total(items=None):
 
 
 @frappe.whitelist(allow_guest=True)
-def create_supplier(
-    supplier_name,
-    supplier_type,
+def create_customer(
+    customer_name,
+    customer_type,
     gstin=None,
     gst_category=None,
     country="India",
@@ -657,95 +657,102 @@ def create_supplier(
     email_id=None
 ):
     try:
-        allowed_supplier_types = [
+        allowed_customer_types = [
             "Company",
             "Individual",
             "Partnership"
         ]
 
-        if supplier_type not in allowed_supplier_types:
+        # Validate Customer Type
+        if customer_type not in allowed_customer_types:
             return {
                 "success": False,
-                "message": "Invalid Supplier Type"
+                "message": "Invalid Customer Type"
             }
 
         # GSTIN is not mandatory for Individual
-        if supplier_type != "Individual" and gst_category == "Registered Regular":
+        if customer_type != "Individual" and gst_category == "Registered Regular":
             if not gstin:
                 return {
                     "success": False,
-                    "message": "GSTIN is required for Registered Regular suppliers"
+                    "message": "GSTIN is required for Registered Regular customers"
                 }
 
-        # Check duplicate supplier
-        existing_supplier = frappe.db.exists(
-            "Supplier",
+        # Check duplicate customer
+        existing_customer = frappe.db.exists(
+            "Customer",
             {
-                "supplier_name": supplier_name
+                "customer_name": customer_name
             }
         )
 
-        if existing_supplier:
+        if existing_customer:
             return {
                 "success": False,
-                "message": "Supplier already exists",
-                "supplier": existing_supplier
+                "message": "Customer already exists",
+                "customer": existing_customer
             }
 
-        supplier = frappe.new_doc("Supplier")
+        # Create Customer
+        customer = frappe.new_doc("Customer")
 
         # Default fields
-        supplier.supplier_name = supplier_name
-        supplier.supplier_group = "Dealer"
-        supplier.supplier_type = supplier_type
-        supplier.country = country
+        customer.customer_name = customer_name
+        customer.customer_group = "Individual"
+        customer.customer_type = customer_type
+        customer.territory = "All Territories"
+
+        # Country
+        if country:
+            customer.country = country
 
         # Optional GST fields
         if gstin:
-            supplier.tax_id = gstin
+            customer.tax_id = gstin
 
         if gst_category:
-            supplier.gst_category = gst_category
+            customer.gst_category = gst_category
 
         # Contact fields
         if mobile_no:
-            supplier.mobile_no = mobile_no
+            customer.mobile_no = mobile_no
 
         if email_id:
-            supplier.email_id = email_id
+            customer.email_id = email_id
 
-        supplier.insert(ignore_permissions=True)
+        # Insert Customer
+        customer.insert(ignore_permissions=True)
 
         frappe.db.commit()
 
         return {
             "success": True,
-            "message": "Supplier created successfully",
+            "message": "Customer created successfully",
             "data": {
-                "supplier": supplier.name,
-                "supplier_name": supplier.supplier_name,
-                "supplier_group": supplier.supplier_group,
-                "supplier_type": supplier.supplier_type,
-                "gstin": supplier.tax_id,
-                "gst_category": supplier.gst_category
+                "customer": customer.name,
+                "customer_name": customer.customer_name,
+                "customer_group": customer.customer_group,
+                "customer_type": customer.customer_type,
+                "gstin": customer.tax_id,
+                "gst_category": customer.gst_category
             }
         }
 
     except Exception:
         frappe.log_error(
             frappe.get_traceback(),
-            "Mobile Supplier Creation Error"
+            "Mobile Customer Creation Error"
         )
 
         return {
             "success": False,
-            "message": "Failed to create supplier"
-        }   
+            "message": "Failed to create customer"
+        } 
 
 
 @frappe.whitelist(allow_guest=True)
-def create_supplier_address(
-    supplier_name,
+def create_customer_address(
+    customer_name,
     address_title,
     address_type,
     address_line1,
@@ -757,17 +764,17 @@ def create_supplier_address(
     is_shipping_address=0
 ):
     try:
-        # Validate Supplier
-        if not supplier_name:
+        # Validate Customer
+        if not customer_name:
             return {
                 "success": False,
-                "message": "Supplier is required"
+                "message": "Customer is required"
             }
 
-        if not frappe.db.exists("Supplier", supplier_name):
+        if not frappe.db.exists("Customer", customer_name):
             return {
                 "success": False,
-                "message": "Supplier not found"
+                "message": "Customer not found"
             }
 
         # Validate Address
@@ -797,10 +804,10 @@ def create_supplier_address(
         address.is_primary_address = int(is_primary_address or 0)
         address.is_shipping_address = int(is_shipping_address or 0)
 
-        # Link Address to Supplier
+        # Link Address to Customer
         address.append("links", {
-            "link_doctype": "Supplier",
-            "link_name": supplier_name
+            "link_doctype": "Customer",
+            "link_name": customer_name
         })
 
         # Insert Address
@@ -810,24 +817,24 @@ def create_supplier_address(
 
         return {
             "success": True,
-            "message": "Address created successfully",
+            "message": "Customer address created successfully",
             "data": {
                 "address": address.name,
                 "address_title": address.address_title,
                 "address_type": address.address_type,
-                "supplier": supplier_name
+                "customer": customer_name
             }
         }
 
     except Exception:
         frappe.log_error(
             frappe.get_traceback(),
-            "Mobile Supplier Address Creation Error"
+            "Mobile Customer Address Creation Error"
         )
 
         return {
             "success": False,
-            "message": "Failed to create address"
-        }     
+            "message": "Failed to create customer address"
+        }   
 
 

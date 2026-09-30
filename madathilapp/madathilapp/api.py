@@ -740,6 +740,94 @@ def create_supplier(
         return {
             "success": False,
             "message": "Failed to create supplier"
-        }    
+        }   
+
+
+@frappe.whitelist(allow_guest=True)
+def create_supplier_address(
+    supplier_name,
+    address_title,
+    address_type,
+    address_line1,
+    address_line2=None,
+    city=None,
+    state=None,
+    country="India",
+    is_primary_address=0,
+    is_shipping_address=0
+):
+    try:
+        # Validate Supplier
+        if not supplier_name:
+            return {
+                "success": False,
+                "message": "Supplier is required"
+            }
+
+        if not frappe.db.exists("Supplier", supplier_name):
+            return {
+                "success": False,
+                "message": "Supplier not found"
+            }
+
+        # Validate Address
+        if not address_title:
+            return {
+                "success": False,
+                "message": "Address Title is required"
+            }
+
+        if not address_line1:
+            return {
+                "success": False,
+                "message": "Address Line 1 is required"
+            }
+
+        # Create Address
+        address = frappe.new_doc("Address")
+
+        address.address_title = address_title
+        address.address_type = address_type
+        address.address_line1 = address_line1
+        address.address_line2 = address_line2
+        address.city = city
+        address.state = state
+        address.country = country
+
+        address.is_primary_address = int(is_primary_address or 0)
+        address.is_shipping_address = int(is_shipping_address or 0)
+
+        # Link Address to Supplier
+        address.append("links", {
+            "link_doctype": "Supplier",
+            "link_name": supplier_name
+        })
+
+        # Insert Address
+        address.insert(ignore_permissions=True)
+
+        frappe.db.commit()
+
+        return {
+            "success": True,
+            "message": "Address created successfully",
+            "data": {
+                "address": address.name,
+                "address_title": address.address_title,
+                "address_type": address.address_type,
+                "supplier": supplier_name
+            }
+        }
+
+    except Exception:
+        frappe.log_error(
+            frappe.get_traceback(),
+            "Mobile Supplier Address Creation Error"
+        )
+
+        return {
+            "success": False,
+            "message": "Failed to create address"
+        }     
 
 

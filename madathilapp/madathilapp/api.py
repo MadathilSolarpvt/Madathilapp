@@ -868,7 +868,7 @@ def get_my_leads():
                 "whatsapp_no",
                 "lead_owner",
                 "area",
-                "address"
+                
             ],
             order_by="modified desc"
         )

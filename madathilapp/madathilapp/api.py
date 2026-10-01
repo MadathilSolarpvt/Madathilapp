@@ -838,3 +838,116 @@ def create_customer_address(
         }   
 
 
+@frappe.whitelist()
+def get_my_leads():
+    try:
+        # ---------------------------------------------------------
+        # CURRENT LOGGED-IN USER
+        # ---------------------------------------------------------
+        current_user = frappe.session.user
+
+        if not current_user or current_user == "Guest":
+            frappe.throw("Please login to access leads.")
+
+        # ---------------------------------------------------------
+        # GET LEADS
+        # ONLY LEADS OWNED BY CURRENT USER
+        # ---------------------------------------------------------
+        leads = frappe.get_all(
+            "Lead",
+            filters={
+                "lead_owner": current_user
+            },
+            fields=[
+                "name",
+                "lead_name",
+                "source",
+                "status",
+                "email_id",
+                "mobile_no",
+                "whatsapp_no",
+                "lead_owner",
+                "area",
+                "address"
+            ],
+            order_by="modified desc"
+        )
+
+        # ---------------------------------------------------------
+        # PROCESS EACH LEAD
+        # ---------------------------------------------------------
+        for lead in leads:
+
+            # -----------------------------------------------------
+            # LEAD TRACKING
+            # -----------------------------------------------------
+            lead["lead_tracking"] = frappe.get_all(
+                "Lead Tracking",
+                filters={
+                    "parent": lead["name"],
+                    "parenttype": "Lead",
+                    "parentfield": "lead_tracking"
+                },
+                fields=[
+                    "date_and_time",
+                    "status",
+                    "feedback",
+                    "userlink"
+                ],
+                order_by="date_and_time desc"
+            )
+
+            # -----------------------------------------------------
+            # ADDRESS
+            # Find Address records linked to this Lead
+            # -----------------------------------------------------
+            addresses = frappe.get_all(
+                "Address",
+                filters={
+                    "link_doctype": "Lead",
+                    "link_name": lead["name"]
+                },
+                fields=[
+                    "name",
+                    "address_title",
+                    "address_type",
+                    "address_line1",
+                    "address_line2",
+                    "city",
+                    "state",
+                    "country",
+                    "pincode",
+                    "email_id",
+                    "phone",
+                    "is_primary_address",
+                    "is_shipping_address"
+                ],
+                order_by="is_primary_address desc"
+            )
+
+            lead["addresses"] = addresses
+
+        # ---------------------------------------------------------
+        # RESPONSE
+        # ---------------------------------------------------------
+        return {
+            "success": True,
+            "message": "Leads fetched successfully",
+            "user": current_user,
+            "count": len(leads),
+            "data": leads
+        }
+
+    except Exception as e:
+
+        frappe.log_error(
+            title="Get My Leads API Error",
+            message=frappe.get_traceback()
+        )
+
+        return {
+            "success": False,
+            "message": str(e),
+            "data": []
+        }
+

@@ -951,3 +951,142 @@ def get_my_leads():
             "data": []
         }
 
+@frappe.whitelist()
+def get_my_customers():
+    try:
+        # ---------------------------------------------------------
+        # CURRENT LOGGED-IN USER
+        # ---------------------------------------------------------
+        current_user = frappe.session.user
+
+        if not current_user or current_user == "Guest":
+            frappe.throw("Please login to access customers.")
+
+        # ---------------------------------------------------------
+        # GET ONLY CUSTOMERS OWNED BY CURRENT USER
+        # ---------------------------------------------------------
+        customers = frappe.get_all(
+            "Customer",
+            filters={
+                "custom_customer_owner": current_user
+            },
+            fields=[
+
+                "customer_name",
+                "customer_type",
+                "customer_group",
+                "territory",
+                "gstin",
+                "custom_zone_name",
+                "custom_customer_owner",
+                "mobile_no",
+                "email_id",
+                "primary_address",
+                "customer_primary_contact"
+            ],
+            order_by="modified desc"
+        )
+
+        # ---------------------------------------------------------
+        # RESPONSE
+        # ---------------------------------------------------------
+        return {
+            "success": True,
+            "message": "Customers fetched successfully",
+            "user": current_user,
+            "count": len(customers),
+            "data": customers
+        }
+
+    except Exception as e:
+
+        frappe.log_error(
+            title="Get My Customers API Error",
+            message=frappe.get_traceback()
+        )
+
+        return {
+            "success": False,
+            "message": str(e),
+            "data": []
+        }  
+
+
+
+@frappe.whitelist()
+def add_lead_follow_up(
+    lead_name,
+    status,
+    feedback,
+    date_and_time=None
+):
+    try:
+        current_user = frappe.session.user
+
+        # ==========================
+        # LOGIN CHECK
+        # ==========================
+        if not current_user or current_user == "Guest":
+            return {
+                "success": False,
+                "message": "Please login to add follow-up."
+            }
+
+        # ==========================
+        # GET LEAD
+        # ==========================
+        lead = frappe.get_doc("Lead", lead_name)
+
+        # ==========================
+        # ONLY LEAD OWNER CAN ADD
+        # FOLLOW-UP
+        # ==========================
+        if lead.lead_owner != current_user:
+            return {
+                "success": False,
+                "message": "You can only add follow-up to your own leads."
+            }
+
+        # ==========================
+        # ADD FOLLOW-UP
+        # ==========================
+        row = lead.append(
+            "lead_tracking",
+            {
+                "date_and_time": date_and_time or frappe.utils.now_datetime(),
+                "status": status,
+                "feedback": feedback,
+                "userlink": current_user
+            }
+        )
+
+        # ==========================
+        # SAVE LEAD
+        # ==========================
+        lead.save(ignore_permissions=True)
+
+        frappe.db.commit()
+
+        return {
+            "success": True,
+            "message": "Follow-up added successfully",
+            "data": {
+                
+                "date_and_time": row.date_and_time,
+                "status": row.status,
+                "feedback": row.feedback,
+                "userlink": row.userlink
+            }
+        }
+
+    except Exception as e:
+        frappe.log_error(
+            title="Add Lead Follow-up API Error",
+            message=frappe.get_traceback()
+        )
+
+        return {
+            "success": False,
+            "message": str(e)
+        }      
+

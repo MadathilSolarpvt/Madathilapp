@@ -1093,46 +1093,72 @@ def add_lead_follow_up(
 
 
 
-
 @frappe.whitelist()
 def get_my_payment_entries():
-    """
-    Get Payment Entries belonging to the logged-in sales user,
-    including Payment References.
-    """
 
     user = frappe.session.user
 
     if not user or user == "Guest":
         frappe.throw("Login required")
 
-    payment_entries = frappe.get_all(
-        "Payment Entry",
-        filters={
-            "custom_sales_user": user
-        },
-        fields=[
-            "name",
-            "payment_type",
-            "posting_date",
-            "party_type",
-            "party",
-            "party_name",
-            "paid_amount",
-            "received_amount",
-            "paid_from",
-            "paid_to",
-            "mode_of_payment",
-            "reference_no",
-            "reference_date",
-            "remarks",
-            "status",
-            "company",
-            "creation",
-            "modified"
-        ],
-        order_by="posting_date desc, creation desc"
-    )
+    # Administrator can see all Payment Entries
+    if user == "Administrator":
+        payment_entries = frappe.get_all(
+            "Payment Entry",
+            fields=[
+                "name",
+                "payment_type",
+                "posting_date",
+                "party_type",
+                "party",
+                "party_name",
+                "paid_amount",
+                "received_amount",
+                "paid_from",
+                "paid_to",
+                "mode_of_payment",
+                "reference_no",
+                "reference_date",
+                "remarks",
+                "status",
+                "company",
+                "custom_sales_user",
+                "creation",
+                "modified"
+            ],
+            order_by="posting_date desc, creation desc"
+        )
+
+    else:
+        # Sales user can see only their own Payment Entries
+        payment_entries = frappe.get_all(
+            "Payment Entry",
+            filters={
+                "custom_sales_user": user
+            },
+            fields=[
+                "name",
+                "payment_type",
+                "posting_date",
+                "party_type",
+                "party",
+                "party_name",
+                "paid_amount",
+                "received_amount",
+                "paid_from",
+                "paid_to",
+                "mode_of_payment",
+                "reference_no",
+                "reference_date",
+                "remarks",
+                "status",
+                "company",
+                "custom_sales_user",
+                "creation",
+                "modified"
+            ],
+            order_by="posting_date desc, creation desc"
+        )
 
     result = []
 

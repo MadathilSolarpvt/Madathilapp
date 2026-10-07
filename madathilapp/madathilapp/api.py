@@ -1185,3 +1185,26 @@ def get_my_payment_entries():
         result.append(payment)
 
     return result
+
+@frappe.whitelist()
+def check_payment_api_user():
+
+    user = frappe.session.user
+
+    payment = frappe.db.get_value(
+        "Payment Entry",
+        "ACC-PAY-2026-00018",
+        [
+            "name",
+            "custom_sales_user",
+            "status",
+            "party",
+            "paid_amount"
+        ],
+        as_dict=True
+    )
+
+    return {
+        "logged_in_user": user,
+        "payment_entry": payment
+    }

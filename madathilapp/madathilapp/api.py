@@ -1088,5 +1088,74 @@ def add_lead_follow_up(
         return {
             "success": False,
             "message": str(e)
-        }      
+        } 
 
+
+
+
+
+@frappe.whitelist()
+def get_my_payment_entries():
+    """
+    Get Payment Entries belonging to the logged-in sales user,
+    including Payment References.
+    """
+
+    user = frappe.session.user
+
+    if not user or user == "Guest":
+        frappe.throw("Login required")
+
+    payment_entries = frappe.get_all(
+        "Payment Entry",
+        filters={
+            "custom_sales_user": user
+        },
+        fields=[
+            "name",
+            "payment_type",
+            "posting_date",
+            "party_type",
+            "party",
+            "party_name",
+            "paid_amount",
+            "received_amount",
+            "paid_from",
+            "paid_to",
+            "mode_of_payment",
+            "reference_no",
+            "reference_date",
+            "remarks",
+            "status",
+            "company",
+            "creation",
+            "modified"
+        ],
+        order_by="posting_date desc, creation desc"
+    )
+
+    result = []
+
+    for payment in payment_entries:
+
+        references = frappe.get_all(
+            "Payment Entry Reference",
+            filters={
+                "parent": payment.name,
+                "parenttype": "Payment Entry"
+            },
+            fields=[
+                "reference_doctype",
+                "reference_name",
+                "total_amount",
+                "outstanding_amount",
+                "allocated_amount"
+            ],
+            order_by="idx asc"
+        )
+
+        payment["references"] = references
+
+        result.append(payment)
+
+    return result

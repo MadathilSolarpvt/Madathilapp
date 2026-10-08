@@ -1208,3 +1208,99 @@ def check_payment_api_user():
         "logged_in_user": user,
         "payment_entry": payment
     }
+
+
+
+@frappe.whitelist()
+def create_mobile_payment_entry(
+    sales_order,
+    customer,
+    company,
+    sales_user,
+    mode_of_payment,
+    paid_amount,
+    attachment_url=None,
+):
+    try:
+        paid_amount = float(paid_amount)
+
+        if paid_amount <= 0:
+            frappe.throw("Paid Amount must be greater than zero")
+
+        # ---------------------------------------------------------
+        # Create Payment Entry
+        # ---------------------------------------------------------
+
+        payment_entry = frappe.new_doc("Payment Entry")
+
+        payment_entry.payment_type = "Receive"
+        payment_entry.posting_date = frappe.utils.today()
+
+        payment_entry.party_type = "Customer"
+        payment_entry.party = customer
+
+        payment_entry.company = company
+
+        payment_entry.mode_of_payment = mode_of_payment
+
+        payment_entry.paid_amount = paid_amount
+        payment_entry.received_amount = paid_amount
+
+        # Mobile Payment Entry always starts as Pending
+        payment_entry.custom_status_of_payment = "Pending"
+
+        # Sales User
+        payment_entry.custom_sales_user = sales_user
+
+        # ---------------------------------------------------------
+        # Existing Sales Order reference
+        # ---------------------------------------------------------
+
+        payment_entry.append(
+            "references",
+            {
+                "reference_doctype": "Sales Order",
+                "reference_name": sales_order,
+                "allocated_amount": paid_amount,
+            },
+        )
+
+        # ---------------------------------------------------------
+        # Optional attachment
+        # ---------------------------------------------------------
+
+        if attachment_url:
+            payment_entry.custom_transaction_attachement = attachment_url
+
+        # ---------------------------------------------------------
+        # Let ERPNext set missing account values
+        # ---------------------------------------------------------
+
+        payment_entry.set_missing_values()
+
+        # ---------------------------------------------------------
+        # Insert without requiring Payment Entry Create
+        # permission for the mobile user
+        # ---------------------------------------------------------
+
+        payment_entry.insert(ignore_permissions=True)
+
+        frappe.db.commit()
+
+        return {
+            "success": True,
+            "name": payment_entry.name,
+            "message": "Payment Entry created successfully",
+        }
+
+    except Exception:
+        frappe.log_error(
+            frappe.get_traceback(),
+            "Mobile Payment Entry Creation Error",
+        )
+
+        frappe.throw(
+            frappe.get_traceback().splitlines()[-1]
+            if frappe.get_traceback()
+            else "Payment Entry creation failed"
+        )

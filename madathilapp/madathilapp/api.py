@@ -1186,28 +1186,28 @@ def get_my_payment_entries():
 
     return result
 
-@frappe.whitelist()
-def check_payment_api_user():
+# @frappe.whitelist()
+# def check_payment_api_user():
 
-    user = frappe.session.user
+#     user = frappe.session.user
 
-    payment = frappe.db.get_value(
-        "Payment Entry",
-        "ACC-PAY-2026-00018",
-        [
-            "name",
-            "custom_sales_user",
-            "status",
-            "party",
-            "paid_amount"
-        ],
-        as_dict=True
-    )
+#     payment = frappe.db.get_value(
+#         "Payment Entry",
+#         "ACC-PAY-2026-00018",
+#         [
+#             "name",
+#             "custom_sales_user",
+#             "status",
+#             "party",
+#             "paid_amount"
+#         ],
+#         as_dict=True
+#     )
 
-    return {
-        "logged_in_user": user,
-        "payment_entry": payment
-    }
+#     return {
+#         "logged_in_user": user,
+#         "payment_entry": payment
+#     }
 
 
 
@@ -1220,6 +1220,8 @@ def create_mobile_payment_entry(
     sales_user,
     mode_of_payment,
     paid_amount,
+    reference_no,
+    reference_date,
     attachment_url=None,
 ):
     try:
@@ -1231,6 +1233,20 @@ def create_mobile_payment_entry(
 
         if paid_amount <= 0:
             frappe.throw("Paid Amount must be greater than zero")
+
+        # ---------------------------------------------------------
+        # Validate Reference No
+        # ---------------------------------------------------------
+
+        if not reference_no or not str(reference_no).strip():
+            frappe.throw("Reference No is required")
+
+        # ---------------------------------------------------------
+        # Validate Reference Date
+        # ---------------------------------------------------------
+
+        if not reference_date:
+            frappe.throw("Reference Date is required")
 
         # ---------------------------------------------------------
         # Validate Sales Order
@@ -1265,7 +1281,7 @@ def create_mobile_payment_entry(
 
         if not frappe.db.exists(
             "Mode of Payment",
-            mode_of_payment
+            mode_of_payment,
         ):
             frappe.throw(
                 f"Mode of Payment {mode_of_payment} does not exist"
@@ -1276,6 +1292,10 @@ def create_mobile_payment_entry(
         # ---------------------------------------------------------
 
         payment_entry = frappe.new_doc("Payment Entry")
+
+        # ---------------------------------------------------------
+        # Payment Information
+        # ---------------------------------------------------------
 
         payment_entry.payment_type = "Receive"
         payment_entry.posting_date = frappe.utils.today()
@@ -1318,7 +1338,9 @@ def create_mobile_payment_entry(
         )
 
         payment_entry.party_account = party_account
-        payment_entry.party_account_currency = party_account_currency
+        payment_entry.party_account_currency = (
+            party_account_currency
+        )
 
         payment_entry.paid_from = party_account
         payment_entry.paid_from_account_currency = (
@@ -1406,16 +1428,19 @@ def create_mobile_payment_entry(
         # ---------------------------------------------------------
 
         payment_entry.party_account = party_account
+
         payment_entry.party_account_currency = (
             party_account_currency
         )
 
         payment_entry.paid_from = party_account
+
         payment_entry.paid_from_account_currency = (
             party_account_currency
         )
 
         payment_entry.paid_to = paid_to
+
         payment_entry.paid_to_account_currency = (
             paid_to_account_currency
         )
@@ -1474,6 +1499,16 @@ def create_mobile_payment_entry(
                 and reference.reference_name == sales_order
             ):
                 reference.allocated_amount = paid_amount
+
+        # ---------------------------------------------------------
+        # Set Bank Transaction Reference
+        # ---------------------------------------------------------
+
+        payment_entry.reference_no = str(
+            reference_no
+        ).strip()
+
+        payment_entry.reference_date = reference_date
 
         # ---------------------------------------------------------
         # Insert Payment Entry

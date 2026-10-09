@@ -1152,6 +1152,7 @@ def get_my_payment_entries():
                 "reference_date",
                 "remarks",
                 "status",
+                "custom_status_of_payment",
                 "company",
                 "custom_sales_user",
                 "creation",

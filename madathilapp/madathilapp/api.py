@@ -1211,6 +1211,7 @@ def check_payment_api_user():
 
 
 
+
 @frappe.whitelist()
 def create_mobile_payment_entry(
     sales_order,
@@ -1276,12 +1277,14 @@ def create_mobile_payment_entry(
 
         payment_entry = frappe.new_doc("Payment Entry")
 
-        payment_entry.payment_type = "Receive"
+        # ---------------------------------------------------------
+        # Payment Information
+        # ---------------------------------------------------------
 
+        payment_entry.payment_type = "Receive"
         payment_entry.posting_date = frappe.utils.today()
 
         payment_entry.party_type = "Customer"
-
         payment_entry.party = customer
 
         payment_entry.company = company
@@ -1289,11 +1292,23 @@ def create_mobile_payment_entry(
         payment_entry.mode_of_payment = mode_of_payment
 
         payment_entry.paid_amount = paid_amount
-
         payment_entry.received_amount = paid_amount
 
         # ---------------------------------------------------------
-        # Payment Status
+        # Initialize Payment Entry Account Fields
+        # ---------------------------------------------------------
+
+        payment_entry.party_account = None
+        payment_entry.party_account_currency = None
+
+        payment_entry.paid_from = None
+        payment_entry.paid_to = None
+
+        payment_entry.paid_from_account_currency = None
+        payment_entry.paid_to_account_currency = None
+
+        # ---------------------------------------------------------
+        # Mobile Payment Status
         # ---------------------------------------------------------
 
         payment_entry.custom_status_of_payment = "Pending"
@@ -1335,9 +1350,6 @@ def create_mobile_payment_entry(
         # ---------------------------------------------------------
         # Exchange Rates
         # ---------------------------------------------------------
-        # For same-currency transactions, ERPNext requires
-        # valid exchange rates.
-        # ---------------------------------------------------------
 
         if not payment_entry.source_exchange_rate:
             payment_entry.source_exchange_rate = 1
@@ -1346,16 +1358,14 @@ def create_mobile_payment_entry(
             payment_entry.target_exchange_rate = 1
 
         # ---------------------------------------------------------
-        # Keep Received Amount Correct
+        # Make Sure Amounts Are Correct
         # ---------------------------------------------------------
 
+        payment_entry.paid_amount = paid_amount
         payment_entry.received_amount = paid_amount
 
         # ---------------------------------------------------------
         # Insert Payment Entry
-        # ---------------------------------------------------------
-        # Mobile user does not need Payment Entry Create permission.
-        # The API performs the creation.
         # ---------------------------------------------------------
 
         payment_entry.insert(
@@ -1367,10 +1377,6 @@ def create_mobile_payment_entry(
         # ---------------------------------------------------------
 
         frappe.db.commit()
-
-        # ---------------------------------------------------------
-        # Return Success
-        # ---------------------------------------------------------
 
         return {
             "success": True,
@@ -1389,7 +1395,7 @@ def create_mobile_payment_entry(
         )
 
         # ---------------------------------------------------------
-        # Return Clean Error To Mobile App
+        # Return Error
         # ---------------------------------------------------------
 
         frappe.throw(str(e))

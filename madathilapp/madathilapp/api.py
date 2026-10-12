@@ -1114,6 +1114,7 @@ def get_my_payment_entries():
                 "party_name",
                 "paid_amount",
                 "received_amount",
+                "docstatus",
                 "paid_from",
                 "paid_to",
                 "mode_of_payment",

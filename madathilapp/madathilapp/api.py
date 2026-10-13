@@ -1093,6 +1093,101 @@ def add_lead_follow_up(
 
 
 
+# @frappe.whitelist()
+# def get_my_payment_entries():
+
+#     user = frappe.session.user
+
+#     if not user or user == "Guest":
+#         frappe.throw("Login required")
+
+#     # Administrator can see all Payment Entries
+#     if user == "Administrator":
+#         payment_entries = frappe.get_all(
+#             "Payment Entry",
+#             fields=[
+#                 "name",
+#                 "payment_type",
+#                 "posting_date",
+#                 "party_type",
+#                 "party",
+#                 "party_name",
+#                 "paid_amount",
+#                 "received_amount",
+#                 "docstatus",
+#                 "paid_from",
+#                 "paid_to",
+#                 "mode_of_payment",
+#                 "reference_no",
+#                 "reference_date",
+#                 "remarks",
+#                 "status",
+#                 "company",
+#                 "custom_sales_user",
+#                 "creation",
+#                 "modified"
+#             ],
+#             order_by="posting_date desc, creation desc"
+#         )
+
+#     else:
+#         # Sales user can see only their own Payment Entries
+#         payment_entries = frappe.get_all(
+#             "Payment Entry",
+#             filters={
+#                 "custom_sales_user": user
+#             },
+#             fields=[
+#                 "name",
+#                 "payment_type",
+#                 "posting_date",
+#                 "party_type",
+#                 "party",
+#                 "party_name",
+#                 "paid_amount",
+#                 "received_amount",
+#                 "paid_from",
+#                 "paid_to",
+#                 "mode_of_payment",
+#                 "reference_no",
+#                 "reference_date",
+#                 "remarks",
+#                 "status",
+#                 "custom_status_of_payment",
+#                 "company",
+#                 "custom_sales_user",
+#                 "creation",
+#                 "modified"
+#             ],
+#             order_by="posting_date desc, creation desc"
+#         )
+
+#     result = []
+
+#     for payment in payment_entries:
+
+#         references = frappe.get_all(
+#             "Payment Entry Reference",
+#             filters={
+#                 "parent": payment.name,
+#                 "parenttype": "Payment Entry"
+#             },
+#             fields=[
+#                 "reference_doctype",
+#                 "reference_name",
+#                 "total_amount",
+#                 "outstanding_amount",
+#                 "allocated_amount"
+#             ],
+#             order_by="idx asc"
+#         )
+
+#         payment["references"] = references
+
+#         result.append(payment)
+
+#     return result
+
 @frappe.whitelist()
 def get_my_payment_entries():
 
@@ -1187,6 +1282,12 @@ def get_my_payment_entries():
         result.append(payment)
 
     return result
+
+
+
+
+
+
 
 # @frappe.whitelist()
 # def check_payment_api_user():

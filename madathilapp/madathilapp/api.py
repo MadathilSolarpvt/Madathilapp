@@ -1127,9 +1127,9 @@ def get_my_payment_entries():
                 "company",
                 "custom_sales_user",
                 "creation",
-                "modified"
+                "modified",
             ],
-            order_by="posting_date desc, creation desc"
+            order_by="posting_date desc, creation desc",
         )
 
     else:
@@ -1160,29 +1160,75 @@ def get_my_payment_entries():
                 "company",
                 "custom_sales_user",
                 "creation",
-                "modified"
+                "modified",
             ],
-            order_by="posting_date desc, creation desc"
+            order_by="posting_date desc, creation desc",
         )
 
     result = []
 
     for payment in payment_entries:
 
+        # ---------------------------------------------------------
+        # Customer Address
+        # ---------------------------------------------------------
+
+        payment["customer_address"] = ""
+
+        if (
+            payment.get("party_type") == "Customer"
+            and payment.get("party")
+        ):
+            address_links = frappe.get_all(
+                "Dynamic Link",
+                filters={
+                    "link_doctype": "Customer",
+                    "link_name": payment.get("party"),
+                    "parenttype": "Address",
+                },
+                fields=["parent"],
+                order_by="idx asc",
+            )
+
+            if address_links:
+                address_doc = frappe.get_doc(
+                    "Address",
+                    address_links[0].parent,
+                )
+
+                address_parts = [
+                    address_doc.get("address_line1"),
+                    address_doc.get("address_line2"),
+                    address_doc.get("city"),
+                    address_doc.get("state"),
+                    address_doc.get("pincode"),
+                    address_doc.get("country"),
+                ]
+
+                payment["customer_address"] = ", ".join(
+                    str(part).strip()
+                    for part in address_parts
+                    if part and str(part).strip()
+                )
+
+        # ---------------------------------------------------------
+        # Payment Entry References
+        # ---------------------------------------------------------
+
         references = frappe.get_all(
             "Payment Entry Reference",
             filters={
                 "parent": payment.name,
-                "parenttype": "Payment Entry"
+                "parenttype": "Payment Entry",
             },
             fields=[
                 "reference_doctype",
                 "reference_name",
                 "total_amount",
                 "outstanding_amount",
-                "allocated_amount"
+                "allocated_amount",
             ],
-            order_by="idx asc"
+            order_by="idx asc",
         )
 
         payment["references"] = references

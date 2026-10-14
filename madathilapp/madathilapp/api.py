@@ -90,31 +90,23 @@ def get_quotation_attachment(quotation):
 # COMMON SALES ORDER OWNERSHIP FILTERS
 # ============================================================
 
-@frappe.whitelist()
+
+# ============================================================
+# SALES ORDER OWNERSHIP FILTERS
+# ============================================================
+
 def get_my_sales_order_or_filters(user):
-
     return [
-        # Main Sales User
         {"custom_sales_user": user},
-
-        # Sales User -> Closing Executive
         {"custom_sales_user__closing_executive": user},
-
-        # Sales User -> Franchise
         {"custom_sales_user__franchise": user},
-
-        # Management hierarchy
         {"custom_am__sales_user": user},
         {"custom_rm__sales_user": user},
         {"custom_zm__sales_user": user},
         {"custom_agm__sales_user": user},
         {"custom_gm__sales_user": user},
         {"custom_vp__sales_user": user},
-
-        # Sales Order Executive
         {"custom_executive_name": user},
-
-        # Sales Order Closing Executive
         {"custom_closing_executive": user},
     ]
 
@@ -125,67 +117,65 @@ def get_my_sales_order_or_filters(user):
 
 @frappe.whitelist()
 def get_my_sales_orders():
-
     user = frappe.session.user
 
     if not user or user == "Guest":
         frappe.throw("Login required")
 
-    # --------------------------------------------------------
-    # Ownership Conditions
-    # --------------------------------------------------------
-
-    or_filters = get_my_sales_order_or_filters(user)
-
-    # --------------------------------------------------------
-    # Get Sales Orders
-    # --------------------------------------------------------
-
-    sales_orders = frappe.get_all(
-        "Sales Order",
-        filters={},
-        or_filters=or_filters,
-        fields=[
-            "name",
-            "customer",
-            "transaction_date",
-            "delivery_date",
-            "status",
-            "grand_total",
-            "company",
-            "custom_sales_user",
-            "custom_executive_name",
-            "custom_closing_executive",
-            "custom_franchise_name",
-            "custom_franchise_commission",
-        ],
-        order_by="modified desc",
-    )
-
-    # ========================================================
-    # PROCESS EACH SALES ORDER
-    # ========================================================
+    # Administrator can view all Sales Orders.
+    if user == "Administrator":
+        sales_orders = frappe.get_all(
+            "Sales Order",
+            fields=[
+                "name",
+                "customer",
+                "transaction_date",
+                "delivery_date",
+                "status",
+                "grand_total",
+                "company",
+                "custom_sales_user",
+                "custom_executive_name",
+                "custom_closing_executive",
+                "custom_franchise_name",
+                "custom_franchise_commission",
+            ],
+            order_by="modified desc",
+            limit_page_length=0,
+        )
+    else:
+        sales_orders = frappe.get_all(
+            "Sales Order",
+            filters={},
+            or_filters=get_my_sales_order_or_filters(user),
+            fields=[
+                "name",
+                "customer",
+                "transaction_date",
+                "delivery_date",
+                "status",
+                "grand_total",
+                "company",
+                "custom_sales_user",
+                "custom_executive_name",
+                "custom_closing_executive",
+                "custom_franchise_name",
+                "custom_franchise_commission",
+            ],
+            order_by="modified desc",
+            limit_page_length=0,
+        )
 
     for order in sales_orders:
-
-        # ----------------------------------------------------
-        # FRANCHISE COMMISSION
-        # ----------------------------------------------------
-
         if order.get("custom_franchise_name"):
             order["custom_franchise_commission"] = (
                 order.get("custom_franchise_commission") or 0
             )
 
-        # ----------------------------------------------------
-        # SALES ORDER ITEMS
-        # ----------------------------------------------------
-
+        # Fetch Sales Order Items.
         order["items"] = frappe.get_all(
             "Sales Order Item",
-            filters={
-                "parent": order["name"],
-            },
+            filters={"parent": order["name"]},
             fields=[
                 "item_code",
                 "item_name",
@@ -199,15 +189,8 @@ def get_my_sales_orders():
             order_by="idx asc",
         )
 
-        # ----------------------------------------------------
-        # APPLICANT COMMISSION DETAILS
-        # ----------------------------------------------------
-
-        sales_order_doc = frappe.get_doc(
-            "Sales Order",
-            order["name"],
-        )
-
+        # Fetch Commission Details.
+        sales_order_doc = frappe.get_doc("Sales Order", order["name"])
         commission_rows = (
             sales_order_doc.get("custom_applicant_commission_detail") or []
         )
@@ -220,10 +203,7 @@ def get_my_sales_orders():
             for row in commission_rows
         ]
 
-        # ----------------------------------------------------
-        # ATTACHMENTS
-        # ----------------------------------------------------
-
+        # Fetch Attachments.
         order["attachments"] = frappe.get_all(
             "File",
             filters={
@@ -237,10 +217,6 @@ def get_my_sales_orders():
             ],
         )
 
-    # ========================================================
-    # RETURN RESPONSE
-    # ========================================================
-
     return {
         "logged_in_user": user,
         "sales_orders": sales_orders,
@@ -253,40 +229,26 @@ def get_my_sales_orders():
 
 @frappe.whitelist()
 def get_my_sales_orders_count():
-
     user = frappe.session.user
 
     if not user or user == "Guest":
         frappe.throw("Login required")
 
-    # --------------------------------------------------------
-    # Use EXACT SAME OWNERSHIP CONDITIONS
-    # --------------------------------------------------------
+    # Administrator sees the global total.
+    if user == "Administrator":
+        return frappe.db.count("Sales Order")
 
-    or_filters = get_my_sales_order_or_filters(user)
-
-    # --------------------------------------------------------
-    # Only fetch Sales Order names
-    # --------------------------------------------------------
-
+    # Normal users see only matching Sales Orders.
     sales_orders = frappe.get_all(
         "Sales Order",
         filters={},
-        or_filters=or_filters,
-        fields=[
-            "name"
-        ],
+        or_filters=get_my_sales_order_or_filters(user),
+        fields=["name"],
         limit_page_length=0,
     )
 
-    # --------------------------------------------------------
-    # Return Count
-    # --------------------------------------------------------
+    return len({order.name for order in sales_orders})
 
-    return {
-        "logged_in_user": user,
-        "count": len(sales_orders),
-    }
 
 
 

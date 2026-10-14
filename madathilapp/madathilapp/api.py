@@ -85,7 +85,14 @@ def get_quotation_attachment(quotation):
 # COMMON SALES ORDER OWNERSHIP FILTERS
 # ============================================================
 
+
+# ============================================================
+# COMMON SALES ORDER OWNERSHIP FILTERS
+# ============================================================
+
+@frappe.whitelist()
 def get_my_sales_order_or_filters(user):
+
     return [
         # Main Sales User
         {"custom_sales_user": user},
@@ -128,7 +135,7 @@ def get_my_sales_orders():
     # Ownership Conditions
     # --------------------------------------------------------
 
-    or_filters = _get_my_sales_order_or_filters(user)
+    or_filters = get_my_sales_order_or_filters(user)
 
     # --------------------------------------------------------
     # Get Sales Orders
@@ -253,21 +260,22 @@ def get_my_sales_orders_count():
         frappe.throw("Login required")
 
     # --------------------------------------------------------
-    # Use EXACT SAME ownership conditions
+    # Use EXACT SAME OWNERSHIP CONDITIONS
     # --------------------------------------------------------
 
-    or_filters = _get_my_sales_order_or_filters(user)
+    or_filters = get_my_sales_order_or_filters(user)
 
     # --------------------------------------------------------
     # Only fetch Sales Order names
-    # No items / attachments / commission details
     # --------------------------------------------------------
 
     sales_orders = frappe.get_all(
         "Sales Order",
         filters={},
         or_filters=or_filters,
-        fields=["name"],
+        fields=[
+            "name"
+        ],
         limit_page_length=0,
     )
 

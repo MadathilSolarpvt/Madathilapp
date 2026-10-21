@@ -12,6 +12,7 @@ def create_material_tracking_from_request(material_request):
     if not material_request:
         frappe.throw(_("Material Request is required."))
 
+    # Fetch Material Request
     mr = frappe.get_doc("Material Request", material_request)
     mr.check_permission("read")
 
@@ -23,7 +24,7 @@ def create_material_tracking_from_request(material_request):
         if sales_order:
             sales_orders.add(sales_order)
 
-    # Optional fallback if your site uses a custom parent field
+    # Fallback to custom Sales Order field
     if not sales_orders:
         custom_sales_order = mr.get("custom_sales_order")
         if custom_sales_order:
@@ -31,59 +32,24 @@ def create_material_tracking_from_request(material_request):
 
     if not sales_orders:
         frappe.throw(
-            _(
-                "No Sales Order linked to Material Request {0}. "
-                "Please check the Sales Order field in the Items table."
-            ).format(mr.name)
+            _("No Sales Order linked to Material Request {0}.").format(
+                mr.name
+            )
         )
 
     if len(sales_orders) > 1:
         frappe.throw(
-            _(
-                "This Material Request is linked to multiple Sales Orders. "
-                "Please create separate Material Tracking records."
-            )
+            _("This Material Request is linked to multiple Sales Orders.")
         )
 
     sales_order_name = next(iter(sales_orders))
 
+    # Fetch Sales Order
     so = frappe.get_doc("Sales Order", sales_order_name)
     so.check_permission("read")
 
-    # Get Sales Order shipping address
-    customer_address = ""
-
-    if so.get("shipping_address_name"):
-        address = frappe.db.get_value(
-            "Address",
-            so.shipping_address_name,
-            [
-                "address_line1",
-                "address_line2",
-                "city",
-                "state",
-                "pincode",
-                "country",
-            ],
-            as_dict=True,
-        )
-
-        if address:
-            customer_address = "\n".join(
-                str(value)
-                for value in [
-                    address.address_line1,
-                    address.address_line2,
-                    address.city,
-                    address.state,
-                    address.pincode,
-                    address.country,
-                ]
-                if value
-            )
-
-    if not customer_address:
-        customer_address = so.get("shipping_address") or ""
+    # Fetch formatted address from Sales Order
+    address_details = so.get("address_display") or ""
 
     # Prevent duplicate Material Tracking
     existing = frappe.db.get_value(
@@ -94,8 +60,9 @@ def create_material_tracking_from_request(material_request):
 
     if existing:
         frappe.throw(
-            _("Material Tracking {0} already exists for this request.")
-            .format(existing)
+            _("Material Tracking {0} already exists for this request.").format(
+                existing
+            )
         )
 
     # Create Material Tracking
@@ -103,13 +70,12 @@ def create_material_tracking_from_request(material_request):
     doc.sales_order_number = so.name
     doc.material_request = mr.name
     doc.customer_name = so.customer_name or so.customer
-    doc.customer_address = customer_address
+    doc.address_details = address_details
     doc.kw = so.get("custom_kw") or 0
 
     doc.insert()
 
     return {"name": doc.name}
-
 
 
 # ============================================================
@@ -118,7 +84,6 @@ def create_material_tracking_from_request(material_request):
 
 @frappe.whitelist()
 def create_site_material_tracking(material_tracking):
-
     if not material_tracking:
         frappe.throw(_("Material Tracking is required."))
 
@@ -129,34 +94,32 @@ def create_site_material_tracking(material_tracking):
     if not source.sales_order_number:
         frappe.throw(_("Sales Order is missing in Material Tracking."))
 
-    # Fetch Sales Order to obtain the Customer link
+    # Fetch Sales Order
     so = frappe.get_doc("Sales Order", source.sales_order_number)
     so.check_permission("read")
 
-    # Prevent duplicate Site Material Tracking
-    # Requires a Link field named material_tracking
-    # in Site Material Tracking.
+    # Prevent duplicates using Sales Order
     existing = frappe.db.get_value(
         "Site Material Tracking",
-        {"material_tracking": source.name},
+        {"sales_order": source.sales_order_number},
         "name",
     )
 
     if existing:
         frappe.throw(
-            _("Site Material Tracking {0} already exists for this record.")
-            .format(existing)
+            _(
+                "Site Material Tracking {0} already exists "
+                "for Sales Order {1}."
+            ).format(existing, source.sales_order_number)
         )
 
     # Create Site Material Tracking
     doc = frappe.new_doc("Site Material Tracking")
-
-    doc.material_tracking = source.name
     doc.sales_order = source.sales_order_number
     doc.material_request = source.material_request
     doc.customer = so.customer
     doc.customer_name = source.customer_name
-    doc.customer_address = source.customer_address
+    doc.customer_address = source.address_details
     doc.kw = source.kw
 
     doc.insert()

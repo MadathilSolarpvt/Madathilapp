@@ -1654,6 +1654,8 @@ def create_mobile_payment_entry(
 
 
 
+
+
 @frappe.whitelist()
 def get_my_material_requests():
     user = frappe.session.user
@@ -1665,7 +1667,7 @@ def get_my_material_requests():
             frappe.PermissionError
         )
 
-    # Fetch only Material Requests assigned to the logged-in sales user
+    # Fetch only the logged-in user's Material Requests
     material_requests = frappe.get_list(
         "Material Request",
         filters={
@@ -1680,7 +1682,7 @@ def get_my_material_requests():
             "custom_customer_name",
             "custom_customer_address",
             "custom_site_engineer_name",
-            "status",
+            "workflow_state",
             "custom_sales_user",
             "custom_engineer_contact_number"
         ],
@@ -1688,3 +1690,4 @@ def get_my_material_requests():
     )
 
     return material_requests
+

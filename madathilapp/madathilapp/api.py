@@ -1,6 +1,6 @@
 import frappe
 import json
-
+from erpnext.accounts.party import get_party_account
 
 @frappe.whitelist()
 def get_quotation_manager():
@@ -1313,7 +1313,6 @@ def get_my_payment_entries():
 
 
 
-
 @frappe.whitelist()
 def create_mobile_payment_entry(
     sales_order,
@@ -1328,83 +1327,96 @@ def create_mobile_payment_entry(
 ):
     try:
         # ---------------------------------------------------------
-        # Validate Paid Amount
+        # 1. Validate required inputs
         # ---------------------------------------------------------
 
-        paid_amount = float(paid_amount)
+        if not sales_order:
+            frappe.throw(_("Sales Order is required"))
 
-        if paid_amount <= 0:
-            frappe.throw("Paid Amount must be greater than zero")
+        if not customer:
+            frappe.throw(_("Customer is required"))
 
-        # ---------------------------------------------------------
-        # Validate Reference No
-        # ---------------------------------------------------------
+        if not company:
+            frappe.throw(_("Company is required"))
+
+        if not mode_of_payment:
+            frappe.throw(_("Mode of Payment is required"))
 
         if not reference_no or not str(reference_no).strip():
-            frappe.throw("Reference No is required")
-
-        # ---------------------------------------------------------
-        # Validate Reference Date
-        # ---------------------------------------------------------
+            frappe.throw(_("Reference No is required"))
 
         if not reference_date:
-            frappe.throw("Reference Date is required")
+            frappe.throw(_("Reference Date is required"))
+
+        try:
+            paid_amount = float(paid_amount)
+        except (TypeError, ValueError):
+            frappe.throw(_("Paid Amount must be a valid number"))
+
+        if paid_amount <= 0:
+            frappe.throw(_("Paid Amount must be greater than zero"))
 
         # ---------------------------------------------------------
-        # Validate Sales Order
+        # 2. Validate attachment
+        # ---------------------------------------------------------
+
+        if not attachment_url or not str(attachment_url).strip():
+            frappe.throw(
+                _("Transaction Details Attachment is required. "
+                  "Please upload the transaction image first.")
+            )
+
+        attachment_url = str(attachment_url).strip()
+
+        # Confirm the uploaded file exists in Frappe.
+        file_exists = frappe.db.exists(
+            "File",
+            {"file_url": attachment_url}
+        )
+
+        if not file_exists:
+            frappe.throw(
+                _("The uploaded attachment was not found in Frappe. "
+                  "Please upload the image again.")
+            )
+
+        # ---------------------------------------------------------
+        # 3. Validate linked records
         # ---------------------------------------------------------
 
         if not frappe.db.exists("Sales Order", sales_order):
             frappe.throw(
-                f"Sales Order {sales_order} does not exist"
+                _("Sales Order {0} does not exist").format(sales_order)
             )
-
-        # ---------------------------------------------------------
-        # Validate Customer
-        # ---------------------------------------------------------
 
         if not frappe.db.exists("Customer", customer):
             frappe.throw(
-                f"Customer {customer} does not exist"
+                _("Customer {0} does not exist").format(customer)
             )
-
-        # ---------------------------------------------------------
-        # Validate Company
-        # ---------------------------------------------------------
 
         if not frappe.db.exists("Company", company):
             frappe.throw(
-                f"Company {company} does not exist"
+                _("Company {0} does not exist").format(company)
             )
 
-        # ---------------------------------------------------------
-        # Validate Mode of Payment
-        # ---------------------------------------------------------
-
-        if not frappe.db.exists(
-            "Mode of Payment",
-            mode_of_payment,
-        ):
+        if not frappe.db.exists("Mode of Payment", mode_of_payment):
             frappe.throw(
-                f"Mode of Payment {mode_of_payment} does not exist"
+                _("Mode of Payment {0} does not exist").format(
+                    mode_of_payment
+                )
             )
 
         # ---------------------------------------------------------
-        # Create Payment Entry
+        # 4. Create Payment Entry
         # ---------------------------------------------------------
 
         payment_entry = frappe.new_doc("Payment Entry")
-
-        # ---------------------------------------------------------
-        # Payment Information
-        # ---------------------------------------------------------
 
         payment_entry.payment_type = "Receive"
         payment_entry.posting_date = frappe.utils.today()
 
         payment_entry.party_type = "Customer"
         payment_entry.party = customer
-
         payment_entry.company = company
         payment_entry.mode_of_payment = mode_of_payment
 
@@ -1412,10 +1424,8 @@ def create_mobile_payment_entry(
         payment_entry.received_amount = paid_amount
 
         # ---------------------------------------------------------
-        # Get Customer Receivable Account
+        # 5. Customer receivable account
         # ---------------------------------------------------------
-
-        from erpnext.accounts.party import get_party_account
 
         party_account = get_party_account(
             "Customer",
@@ -1425,13 +1435,9 @@ def create_mobile_payment_entry(
 
         if not party_account:
             frappe.throw(
-                f"No receivable account found for Customer "
-                f"'{customer}' in Company '{company}'."
+                _("No receivable account found for Customer {0} "
+                  "in Company {1}.").format(customer, company)
             )
-
-        # ---------------------------------------------------------
-        # Customer Account
-        # ---------------------------------------------------------
 
         party_account_currency = frappe.db.get_value(
             "Account",
@@ -1440,17 +1446,12 @@ def create_mobile_payment_entry(
         )
 
         payment_entry.party_account = party_account
-        payment_entry.party_account_currency = (
-            party_account_currency
-        )
-
+        payment_entry.party_account_currency = party_account_currency
         payment_entry.paid_from = party_account
-        payment_entry.paid_from_account_currency = (
-            party_account_currency
-        )
+        payment_entry.paid_from_account_currency = party_account_currency
 
         # ---------------------------------------------------------
-        # Get Mode of Payment Account
+        # 6. Mode of Payment account
         # ---------------------------------------------------------
 
         paid_to = frappe.db.get_value(
@@ -1464,14 +1465,11 @@ def create_mobile_payment_entry(
 
         if not paid_to:
             frappe.throw(
-                f"No default account is configured for "
-                f"Mode of Payment '{mode_of_payment}' "
-                f"for Company '{company}'."
+                _("No default account is configured for Mode of "
+                  "Payment {0} for Company {1}.").format(
+                    mode_of_payment, company
+                )
             )
-
-        # ---------------------------------------------------------
-        # Mode of Payment Account
-        # ---------------------------------------------------------
 
         paid_to_account_currency = frappe.db.get_value(
             "Account",
@@ -1480,25 +1478,24 @@ def create_mobile_payment_entry(
         )
 
         payment_entry.paid_to = paid_to
-
-        payment_entry.paid_to_account_currency = (
-            paid_to_account_currency
-        )
+        payment_entry.paid_to_account_currency = paid_to_account_currency
 
         # ---------------------------------------------------------
-        # Payment Status
+        # 7. Custom fields
         # ---------------------------------------------------------
 
         payment_entry.custom_status_of_payment = "Pending"
-
-        # ---------------------------------------------------------
-        # Sales User
-        # ---------------------------------------------------------
-
         payment_entry.custom_sales_user = sales_user
 
+        # IMPORTANT:
+        # Use the exact fieldname reported by your validation error.
+        payment_entry.set(
+            "custom_transaction_details_attachment",
+            attachment_url
+        )
+
         # ---------------------------------------------------------
-        # Sales Order Reference
+        # 8. Sales Order reference
         # ---------------------------------------------------------
 
         payment_entry.append(
@@ -1511,51 +1508,24 @@ def create_mobile_payment_entry(
         )
 
         # ---------------------------------------------------------
-        # Optional Attachment
-        # ---------------------------------------------------------
-
-        if attachment_url:
-            payment_entry.custom_transaction_attachement = (
-                attachment_url
-            )
-
-        # ---------------------------------------------------------
-        # Set Missing Values
+        # 9. Set missing values and restore accounts
         # ---------------------------------------------------------
 
         payment_entry.set_missing_values()
 
-        # ---------------------------------------------------------
-        # Restore Explicit Account Values
-        # ---------------------------------------------------------
-
         payment_entry.party_account = party_account
-
-        payment_entry.party_account_currency = (
-            party_account_currency
-        )
-
+        payment_entry.party_account_currency = party_account_currency
         payment_entry.paid_from = party_account
-
-        payment_entry.paid_from_account_currency = (
-            party_account_currency
-        )
+        payment_entry.paid_from_account_currency = party_account_currency
 
         payment_entry.paid_to = paid_to
-
-        payment_entry.paid_to_account_currency = (
-            paid_to_account_currency
-        )
+        payment_entry.paid_to_account_currency = paid_to_account_currency
 
         # ---------------------------------------------------------
-        # Exchange Rates
+        # 10. Exchange rates
         # ---------------------------------------------------------
 
         payment_entry.set_exchange_rate()
-
-        # ---------------------------------------------------------
-        # Same Currency Fallback
-        # ---------------------------------------------------------
 
         if (
             party_account_currency
@@ -1565,22 +1535,18 @@ def create_mobile_payment_entry(
             payment_entry.source_exchange_rate = 1
             payment_entry.target_exchange_rate = 1
 
-        # ---------------------------------------------------------
-        # Validate Exchange Rates
-        # ---------------------------------------------------------
-
         if not payment_entry.source_exchange_rate:
             frappe.throw(
-                "Source Exchange Rate could not be determined."
+                _("Source Exchange Rate could not be determined.")
             )
 
         if not payment_entry.target_exchange_rate:
             frappe.throw(
-                "Target Exchange Rate could not be determined."
+                _("Target Exchange Rate could not be determined.")
             )
 
         # ---------------------------------------------------------
-        # Set Amounts
+        # 11. Amounts and allocation
         # ---------------------------------------------------------
 
         payment_entry.paid_amount = paid_amount
@@ -1591,10 +1557,6 @@ def create_mobile_payment_entry(
             / payment_entry.target_exchange_rate
         )
 
-        # ---------------------------------------------------------
-        # Set Sales Order Allocation
-        # ---------------------------------------------------------
-
         for reference in payment_entry.references:
             if (
                 reference.reference_doctype == "Sales Order"
@@ -1603,32 +1565,19 @@ def create_mobile_payment_entry(
                 reference.allocated_amount = paid_amount
 
         # ---------------------------------------------------------
-        # Set Bank Transaction Reference
+        # 12. Bank reference details
         # ---------------------------------------------------------
 
-        payment_entry.reference_no = str(
-            reference_no
-        ).strip()
-
+        payment_entry.reference_no = str(reference_no).strip()
         payment_entry.reference_date = reference_date
 
         # ---------------------------------------------------------
-        # Insert Payment Entry
+        # 13. Insert Payment Entry
         # ---------------------------------------------------------
 
-        payment_entry.insert(
-            ignore_permissions=True
-        )
-
-        # ---------------------------------------------------------
-        # Commit
-        # ---------------------------------------------------------
+        payment_entry.insert(ignore_permissions=True)
 
         frappe.db.commit()
-
-        # ---------------------------------------------------------
-        # Success Response
-        # ---------------------------------------------------------
 
         return {
             "success": True,
@@ -1636,21 +1585,16 @@ def create_mobile_payment_entry(
             "message": "Payment Entry created successfully",
         }
 
-    except Exception as e:
-        # ---------------------------------------------------------
-        # Log Error
-        # ---------------------------------------------------------
+    except Exception:
+        frappe.db.rollback()
 
         frappe.log_error(
             frappe.get_traceback(),
             "Mobile Payment Entry Creation Error",
         )
 
-        # ---------------------------------------------------------
-        # Return Error
-        # ---------------------------------------------------------
+        raise
 
-        frappe.throw(str(e))
 
 
 

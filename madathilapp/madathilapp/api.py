@@ -1691,3 +1691,37 @@ def get_my_material_requests():
 
     return material_requests
 
+
+
+@frappe.whitelist()
+def get_site_material_tracking():
+    user = frappe.session.user
+
+    # Prevent guest access
+    if user == "Guest":
+        frappe.throw(
+            _("Please log in to view Site Material Tracking."),
+            frappe.PermissionError
+        )
+
+    # Fetch Site Material Tracking records
+    records = frappe.get_list(
+        "Site Material Tracking",
+        fields=[
+            "name",
+            "sales_order",
+            "material_request",
+            "customer_name",
+            "customer_address",
+            "kw",
+            "driver",
+            "driver_contact_number",
+            "material_dispose_date",
+            "vehicle_number",
+            "verified_person_name",
+            "verified_person_contact_number"
+        ],
+        order_by="creation desc"
+    )
+
+    return records
